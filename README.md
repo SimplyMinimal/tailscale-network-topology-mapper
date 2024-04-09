@@ -23,3 +23,7 @@ You can filter down to specific groups or nodes using the filter bar at the top 
 * It only focuses on the ACL rules themselves but eventually this may start capturing ALL the available valid ACL sections.
 
 Pull requests welcome! :) 
+
+## Experimental Ideas and TODOs
+* Use `tailscale debug netmap` to build a more in-depth map
+* Allow switching between layers such as port level, host level, user/group level

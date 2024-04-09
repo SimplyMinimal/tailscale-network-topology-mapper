@@ -271,33 +271,37 @@ function highlightFilter(filter) {
                                 
                                     <option value="*">*</option>
                                 
-                                    <option value="system_admin">system_admin</option>
+                                    <option value="group:system_admin">group:system_admin</option>
                                 
-                                    <option value="autogroup">autogroup</option>
+                                    <option value="autogroup:member">autogroup:member</option>
                                 
-                                    <option value="all staff@example.com">all staff@example.com</option>
+                                    <option value="autogroup:self:*">autogroup:self:*</option>
+                                
+                                    <option value="group:all staff@example.com">group:all staff@example.com</option>
                                 
                                     <option value="tag:domain-controller:*">tag:domain-controller:*</option>
                                 
                                     <option value="tag:domain-controller">tag:domain-controller</option>
                                 
+                                    <option value="group:all staff@example.com:*">group:all staff@example.com:*</option>
+                                
                                     <option value="tag:database">tag:database</option>
                                 
                                     <option value="tag:database:*">tag:database:*</option>
                                 
-                                    <option value="dba">dba</option>
+                                    <option value="group:dba">group:dba</option>
                                 
                                     <option value="tag:ci">tag:ci</option>
                                 
                                     <option value="uat1">uat1</option>
                                 
-                                    <option value="dev team@example.com">dev team@example.com</option>
+                                    <option value="group:dev team@example.com">group:dev team@example.com</option>
                                 
                                     <option value="tag:prod">tag:prod</option>
                                 
                                     <option value="tag:prod:*">tag:prod:*</option>
                                 
-                                    <option value="sre">sre</option>
+                                    <option value="group:sre">group:sre</option>
                                 
                                     <option value="tag:webserver">tag:webserver</option>
                                 
@@ -523,8 +527,8 @@ function highlightFilter(filter) {
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#00cc66", "id": "tag:security", "label": "tag:security", "shape": "dot"}, {"color": "#ff6666", "id": "*", "label": "*", "shape": "dot"}, {"color": "#FFFF00", "id": "system_admin", "label": "system_admin", "shape": "dot"}, {"color": "#ff6666", "id": "autogroup", "label": "autogroup", "shape": "dot"}, {"color": "#FFFF00", "id": "all staff@example.com", "label": "all staff@example.com", "shape": "dot"}, {"color": "#00cc66", "id": "tag:domain-controller:*", "label": "tag:domain-controller:*", "shape": "dot"}, {"color": "#00cc66", "id": "tag:domain-controller", "label": "tag:domain-controller", "shape": "dot"}, {"color": "#00cc66", "id": "tag:database", "label": "tag:database", "shape": "dot"}, {"color": "#00cc66", "id": "tag:database:*", "label": "tag:database:*", "shape": "dot"}, {"color": "#FFFF00", "id": "dba", "label": "dba", "shape": "dot"}, {"color": "#00cc66", "id": "tag:ci", "label": "tag:ci", "shape": "dot"}, {"color": "#ff6666", "id": "uat1", "label": "uat1", "shape": "dot"}, {"color": "#FFFF00", "id": "dev team@example.com", "label": "dev team@example.com", "shape": "dot"}, {"color": "#00cc66", "id": "tag:prod", "label": "tag:prod", "shape": "dot"}, {"color": "#00cc66", "id": "tag:prod:*", "label": "tag:prod:*", "shape": "dot"}, {"color": "#FFFF00", "id": "sre", "label": "sre", "shape": "dot"}, {"color": "#00cc66", "id": "tag:webserver", "label": "tag:webserver", "shape": "dot"}]);
-                  edges = new vis.DataSet([{"arrows": {"to": {"enabled": true}}, "from": "tag:security", "to": "*"}, {"arrows": {"to": {"enabled": true}}, "from": "system_admin", "to": "*"}, {"arrows": {"to": {"enabled": true}}, "from": "autogroup", "to": "autogroup"}, {"arrows": {"to": {"enabled": true}}, "from": "all staff@example.com", "to": "tag:domain-controller:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:domain-controller", "to": "all staff@example.com"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:domain-controller", "to": "tag:domain-controller:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:database", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "dba", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:ci", "to": "uat1"}, {"arrows": {"to": {"enabled": true}}, "from": "dev team@example.com", "to": "uat1"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:prod", "to": "tag:prod:*"}, {"arrows": {"to": {"enabled": true}}, "from": "sre", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:webserver", "to": "tag:database:*"}]);
+                  nodes = new vis.DataSet([{"color": "#00cc66", "id": "tag:security", "label": "tag:security", "shape": "dot"}, {"color": "#ff6666", "id": "*", "label": "*", "shape": "dot"}, {"color": "#ff6666", "id": "group:system_admin", "label": "group:system_admin", "shape": "dot"}, {"color": "#FFFF00", "id": "autogroup:member", "label": "autogroup:member", "shape": "dot"}, {"color": "#FFFF00", "id": "autogroup:self:*", "label": "autogroup:self:*", "shape": "dot"}, {"color": "#FFFF00", "id": "group:all staff@example.com", "label": "group:all staff@example.com", "shape": "dot"}, {"color": "#00cc66", "id": "tag:domain-controller:*", "label": "tag:domain-controller:*", "shape": "dot"}, {"color": "#00cc66", "id": "tag:domain-controller", "label": "tag:domain-controller", "shape": "dot"}, {"color": "#FFFF00", "id": "group:all staff@example.com:*", "label": "group:all staff@example.com:*", "shape": "dot"}, {"color": "#00cc66", "id": "tag:database", "label": "tag:database", "shape": "dot"}, {"color": "#00cc66", "id": "tag:database:*", "label": "tag:database:*", "shape": "dot"}, {"color": "#ff6666", "id": "group:dba", "label": "group:dba", "shape": "dot"}, {"color": "#00cc66", "id": "tag:ci", "label": "tag:ci", "shape": "dot"}, {"color": "#ff6666", "id": "uat1", "label": "uat1", "shape": "dot"}, {"color": "#FFFF00", "id": "group:dev team@example.com", "label": "group:dev team@example.com", "shape": "dot"}, {"color": "#00cc66", "id": "tag:prod", "label": "tag:prod", "shape": "dot"}, {"color": "#00cc66", "id": "tag:prod:*", "label": "tag:prod:*", "shape": "dot"}, {"color": "#ff6666", "id": "group:sre", "label": "group:sre", "shape": "dot"}, {"color": "#00cc66", "id": "tag:webserver", "label": "tag:webserver", "shape": "dot"}]);
+                  edges = new vis.DataSet([{"arrows": {"to": {"enabled": true}}, "from": "tag:security", "to": "*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:system_admin", "to": "*"}, {"arrows": {"to": {"enabled": true}}, "from": "autogroup:member", "to": "autogroup:self:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:all staff@example.com", "to": "tag:domain-controller:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:domain-controller", "to": "group:all staff@example.com:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:domain-controller", "to": "tag:domain-controller:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:database", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:dba", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:ci", "to": "uat1"}, {"arrows": {"to": {"enabled": true}}, "from": "group:dev team@example.com", "to": "uat1"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:prod", "to": "tag:prod:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:webserver", "to": "tag:database:*"}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });

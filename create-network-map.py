@@ -46,16 +46,22 @@ for rule in acls:
     for node in rule['src']:
         if node.startswith('tag:'):
             src.add(node)  # Preserve the entire tag format
+        elif node.startswith('autogroup:'):
+            src.add(node)  # Preserve the entire autogroup format
         elif node.startswith('group:'):
-            src.add(node.split(':')[1])  # Extract group name
+            src.add(node)  # Preserve the entire group format
+            #src.add(node.split(':')[1])  # Extract group name
         else:
             hostname = node.split(':')[0]  # Extract hostname
             src.add(hostname)
     for node in rule['dst']:
         if node.startswith('tag:'):
             dst.add(node)  # Preserve the entire tag format
+        elif node.startswith('autogroup:'):
+            dst.add(node)  # Preserve the entire autogroup format
         elif node.startswith('group:'):
-            dst.add(node.split(':')[1])  # Extract group name
+            dst.add(node)  # Preserve the entire group format
+            #dst.add(node.split(':')[1])  # Extract group name
         else:
             hostname = node.split(':')[0]  # Extract hostname
             dst.add(hostname)
@@ -76,16 +82,21 @@ for rule in merged_acls:
             net.add_node(src, color=tag_color)
         elif COMPANY_DOMAIN in src:
             net.add_node(src, color=group_color)
-        elif 'group:' + src in groups:
+        elif src.startswith('autogroup:'):
+            net.add_node(src, color=group_color)
+        elif 'group:' in groups:
             net.add_node(src, color=group_color)
         else:
             net.add_node(src, color=host_color)
+            
         for dst in rule['dst']:
             if dst.startswith('tag:'):
                 net.add_node(dst, color=tag_color)
             elif COMPANY_DOMAIN in dst:
                 net.add_node(dst, color=group_color)
-            elif 'group:' + dst in groups:
+            elif dst.startswith('autogroup:'):
+                net.add_node(dst, color=group_color)                
+            elif 'group:' in groups:
                 net.add_node(dst, color=group_color)
             else:
                 net.add_node(dst, color=host_color)

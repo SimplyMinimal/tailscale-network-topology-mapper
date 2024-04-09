@@ -2,7 +2,7 @@
 ### A visual way to view your ACL rules for Tailscale
 I occasionally find myself just wanting to get a glance of how my ACL rules look without reading through the code. This is also useful for showing how our policies are set up to people who are not devs by trade.
 
-![alt text](Images/Animation.gif)
+![alt text](./images/Animation.gif)
 
 # Initial Set Up
 0. You will need Python3 and git installed.

@@ -30,6 +30,9 @@ def load_json_or_hujson_file(filename):
 # Step 1: Parse the ACL File using json
 acl_file_path = 'policy.hujson'
 acl_data = load_json_or_hujson_file(acl_file_path)
+if acl_data is None:
+    print("Error: Could not parse ACL policy file")
+    exit(1)
 
 # Step 2: Extract Hosts, Groups, and Tag Owners
 hosts = acl_data.get('hosts', {})

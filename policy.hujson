@@ -40,6 +40,7 @@
 		"tag:windows-server":    ["janedoe@example.com"],
 		"tag:security":          ["johndoe@example.com"],
 		"tag:ci":                ["johndoe@example.com"],
+		"tag:prod":				 [],
 	},
 
 	// **************************************

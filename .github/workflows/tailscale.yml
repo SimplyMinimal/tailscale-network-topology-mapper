@@ -52,6 +52,7 @@ jobs:
       - name: Run Python script to generate network map
         run: python create-network-map.py
 
+      # This will place the newly generated network map HTML file back into the repo
       - name: Update network map in repo
         uses: stefanzweifel/git-auto-commit-action@v5
         with:

@@ -46,6 +46,7 @@ for rule in acls:
     for node in rule['src']:
         if node.startswith('tag:'):
             src.add(node)  # Preserve the entire tag format
+            #src.add(node.split(':')[1])  # Extract tag name
         elif node.startswith('autogroup:'):
             src.add(node)  # Preserve the entire autogroup format
         elif node.startswith('group:'):
@@ -57,8 +58,10 @@ for rule in acls:
     for node in rule['dst']:
         if node.startswith('tag:'):
             dst.add(node)  # Preserve the entire tag format
+            #dst.add(node.split(':')[1])  # Extract tag name
         elif node.startswith('autogroup:'):
             dst.add(node)  # Preserve the entire autogroup format
+            #dst.add(node.split(':')[1])  # Extract group name
         elif node.startswith('group:'):
             dst.add(node)  # Preserve the entire group format
             #dst.add(node.split(':')[1])  # Extract group name
@@ -75,6 +78,7 @@ group_color = "#FFFF00"  # Group color (Yellow)
 tag_color = "#00cc66"    # Tag color (Green)
 host_color = "#ff6666"   # Host color (Red)
 
+# TODO: Coalesce this into a smaller function
 # Add nodes and edges based on preprocessed ACL rules
 for rule in merged_acls:
     for src in rule['src']:

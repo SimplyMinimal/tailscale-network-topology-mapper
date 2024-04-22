@@ -17,6 +17,10 @@ I occasionally find myself just wanting to get a glance of how my ACL rules look
 
 You can filter down to specific groups or nodes using the filter bar at the top or by clicking on a node on the graph.
 
+### Github Action Workflow
+If you would like to have the network map be automatically updated whenever you push an update to your ACL file then take a look at this example workflow:
+[.github/workflows/tailscale.yml](https://github.com/SimplyMinimal/tailscale-network-topology-mapper/blob/main/.github/workflows/tailscale.yml)
+
 ## Limitations
 * This project is in an early alpha stage.
 * It can only map what is available in the ACL policy file. It is not an active scanning tool that will seek out other hosts.

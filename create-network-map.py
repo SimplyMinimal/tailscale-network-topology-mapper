@@ -6,6 +6,10 @@ from pyvis.network import Network
 # TODO: Update your company domain here
 COMPANY_DOMAIN="example.com"
 
+if "TS_COMPANY_DOMAIN" in os.environ:
+    COMPANY_DOMAIN = os.environ["TS_COMPANY_DOMAIN"]
+    print(f'Using {COMPANY_DOMAIN} as company domain')
+
 def load_json_or_hujson_file(filename):
     if not os.path.isfile(filename):
         print(f"Error: File '{filename}' not found.")

@@ -1,3 +1,4 @@
+import os
 import json
 import hjson
 from pyvis.network import Network
@@ -6,29 +7,32 @@ from pyvis.network import Network
 COMPANY_DOMAIN="example.com"
 
 def load_json_or_hujson_file(filename):
-    try:
-        with open(filename, 'r') as f:
-            # Try loading as JSON
-            try:
-                data = json.load(f)
-                return data
-            except json.decoder.JSONDecodeError:
-                # If loading as JSON fails, try loading as HuJSON
-                f.seek(0)
-                try:
-                    data = hjson.load(f)
-                    return data
-                except hjson.decoder.HjsonDecodeError as e:
-                    print(f"Error decoding '{filename}' as HuJSON: {e}")
-                    return None
-    except FileNotFoundError:
+    if not os.path.isfile(filename):
         print(f"Error: File '{filename}' not found.")
         return None
+
+    with open(filename, 'r') as f:
+        # Try loading as JSON
+        try:
+            data = json.load(f)
+            return data
+        except ValueError:
+            # If loading as JSON fails, try loading as HuJSON
+            f.seek(0)
+            try:
+                data = hjson.load(f)
+                return data
+            except Exception as e:
+                print(f"Error decoding '{filename}' as HuJSON: {e}")
+                return None
 
 
 # Step 1: Parse the ACL File using json
 acl_file_path = 'policy.hujson'
 acl_data = load_json_or_hujson_file(acl_file_path)
+if acl_data is None:
+    print("Error: Could not parse ACL policy file")
+    exit(1)
 
 # Step 2: Extract Hosts, Groups, and Tag Owners
 hosts = acl_data.get('hosts', {})

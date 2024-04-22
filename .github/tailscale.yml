@@ -52,7 +52,8 @@ jobs:
       - name: Run Python script to generate network map
         run: python create-network-map.py
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Update network map in repo
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Auto updating network_topology.html
       # Be aware of limitations here: https://github.com/stefanzweifel/git-auto-commit-action?tab=readme-ov-file#limitations--gotchas

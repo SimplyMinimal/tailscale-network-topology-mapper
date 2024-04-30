@@ -20,8 +20,8 @@ class Renderer:
         )
 
     def render_to_html(self, output_file: str) -> None:
-        for node, color in self.network_graph.nodes:
-            self.net.add_node(node, color=color)
+        for node, color, tooltip_text in self.network_graph.nodes:
+            self.net.add_node(node, color=color, title=tooltip_text)
 
         for src, dst in self.network_graph.edges:
             self.net.add_edge(src, dst, arrows={"to": {"enabled": True}})

@@ -8,8 +8,8 @@ class NetworkGraph:
         self.nodes: Set[str] = set()
         self.edges: List[Tuple[str, str]] = []
 
-    def add_node(self, node: str, color: str) -> None:
-        self.nodes.add((node, color))
+    def add_node(self, node: str, color: str, tooltip_text: str) -> None:
+        self.nodes.add((node, color, tooltip_text))
 
     def add_edge(self, src: str, dst: str) -> None:
         self.edges.append((src, dst))
@@ -20,10 +20,12 @@ class NetworkGraph:
             dst_nodes = self._resolve_nodes(rule["dst"])
 
             for src in src_nodes:
-                self.add_node(src, self._get_node_color(src))
+                src_tooltip = f"Hello world: {src}"
+                self.add_node(src, self._get_node_color(src), src_tooltip)
 
             for dst in dst_nodes:
-                self.add_node(dst, self._get_node_color(dst))
+                dst_tooltip = f"Hello world: {dst}"
+                self.add_node(dst, self._get_node_color(dst), dst_tooltip)
 
             for src in src_nodes:
                 for dst in dst_nodes:

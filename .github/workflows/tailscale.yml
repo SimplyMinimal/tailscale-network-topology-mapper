@@ -2,7 +2,7 @@ name: Sync Tailscale ACLs
 
 on:
   push:
-    branches: ["dev-refactored"]
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 

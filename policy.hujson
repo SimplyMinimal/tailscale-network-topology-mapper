@@ -117,5 +117,23 @@
 			"src": ["tag:webserver", "group:sre"],
 			"dst": ["tag:database:*"],
 		},
+
+		{
+			"action": "accept",
+			"src": ["tag:webserver"],
+			"dst": ["web-server:443"],
+		},
+
+		{
+			"action": "accept",
+			"src": ["group:sre"],
+			"dst": ["tag:database:*",
+					"tag:webserver",
+					"web-server:443",
+					"production-backend:*",
+					"uat1:22"
+				],
+		},
+
 	],
 }

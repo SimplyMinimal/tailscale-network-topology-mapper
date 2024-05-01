@@ -4,8 +4,10 @@ from config import COMPANY_DOMAIN
 
 
 class NetworkGraph:
-    def __init__(self):
-        self.nodes: Set[str] = set()
+    def __init__(self, hosts: Dict[str, str], groups: Dict[str, List[str]]):
+        self.hosts = hosts
+        self.groups = groups
+        self.nodes: Set[Tuple[str, str, str]] = set()
         self.edges: List[Tuple[str, str]] = []
 
     def add_node(self, node: str, color: str, tooltip_text: str) -> None:
@@ -20,11 +22,11 @@ class NetworkGraph:
             dst_nodes = self._resolve_nodes(rule["dst"])
 
             for src in src_nodes:
-                src_tooltip = f"Hello world: {src}"
+                src_tooltip = self._get_node_tooltip(src)
                 self.add_node(src, self._get_node_color(src), src_tooltip)
 
             for dst in dst_nodes:
-                dst_tooltip = f"Hello world: {dst}"
+                dst_tooltip = self._get_node_tooltip(dst)
                 self.add_node(dst, self._get_node_color(dst), dst_tooltip)
 
             for src in src_nodes:
@@ -51,3 +53,14 @@ class NetworkGraph:
             return "#FFFF00"  # Yellow for groups
         else:
             return "#ff6666"  # Red for hosts
+
+    def _get_node_tooltip(self, node: str) -> str:
+        if node in self.hosts:
+            return self.hosts[node]
+        elif node in self.groups:
+            group_members = ", ".join(self.groups[node])
+            return f"Group Members: {group_members}"
+        elif node.startswith("autogroup:"):
+            return node
+        else:
+            return node

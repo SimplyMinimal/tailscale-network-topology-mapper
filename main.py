@@ -1,6 +1,4 @@
-# main.py
 import logging
-from typing import List, Dict
 
 from policy_parser import PolicyParser
 from network_graph import NetworkGraph
@@ -17,7 +15,7 @@ def main():
         logging.error(str(e))
         return
 
-    network_graph = NetworkGraph()
+    network_graph = NetworkGraph(parser.hosts, parser.groups)
     network_graph.build_graph(parser.acls)
 
     renderer = Renderer(network_graph)

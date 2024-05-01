@@ -50,7 +50,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Python script to generate network map
-        run: python create-network-map.py
+        run: python main.py
 
       # This will place the newly generated network map HTML file back into the repo
       - name: Update network map in repo

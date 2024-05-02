@@ -36,14 +36,15 @@ class NetworkGraph:
     def _resolve_nodes(self, nodes: List[str]) -> Set[str]:
         resolved_nodes: Set[str] = set()
         for node in nodes:
-            if node.startswith("tag:"):
-                resolved_nodes.add(node)
-            elif node.startswith("autogroup:"):
-                resolved_nodes.add(node)
-            elif node.startswith("group:"):
-                resolved_nodes.add(node)
-            else:
-                resolved_nodes.add(node.split(":")[0])
+            resolved_nodes.add(node)
+            # if node.startswith("tag:"):
+            #     resolved_nodes.add(node)
+            # elif node.startswith("autogroup:"):
+            #     resolved_nodes.add(node)
+            # elif node.startswith("group:"):
+            #     resolved_nodes.add(node)
+            # else:
+            #     resolved_nodes.add(node.split(":")[0])
         return resolved_nodes
 
     def _get_node_color(self, node: str) -> str:
@@ -55,9 +56,11 @@ class NetworkGraph:
             return "#ff6666"  # Red for hosts
 
     def _get_node_tooltip(self, node: str) -> str:
-        if node in self.hosts:
-            return self.hosts[node]
+        if node.split(":")[0] in self.hosts:
+            # Return IP address of host
+            return self.hosts[node.split(":")[0]]
         elif node in self.groups:
+            # Return group members of the group
             group_members = ", ".join(self.groups[node])
             return f"Group Members: {group_members}"
         elif node.startswith("autogroup:"):

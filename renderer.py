@@ -26,9 +26,10 @@ class Renderer:
         for src, dst in self.network_graph.edges:
             self.net.add_edge(src, dst, arrows={"to": {"enabled": True}})
 
-        self._add_legend()
         self.net.show_buttons()
         self.net.write_html(output_file)
+        self._add_legend()
+
 
     def _add_legend(self) -> None:
         group_color = "#FFFF00"

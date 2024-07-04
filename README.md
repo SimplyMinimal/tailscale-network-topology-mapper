@@ -33,4 +33,4 @@ Pull requests welcome! :)
 * Allow switching between layers such as port level, host level, user/group level
 
 ### Disclaimer:
-This project is an independent creation and is not affiliated with Tailscale or its affiliates. It is solely intended as an expansion upon Tailscale's tools.
+This project is an independent creation and is not affiliated with Tailscale or its partners. It is solely intended as an expansion upon Tailscale's tools.

@@ -95,7 +95,7 @@
 			"src": ["group:dba", 
 					"tag:database"
 			],
-			"dst": ["tag:database:*"],
+			"dst": ["tag:database:5432"],
 		},
 
 		// Grant Dev Team and their pipeline access

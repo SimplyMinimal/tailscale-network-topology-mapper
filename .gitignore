@@ -1,1 +1,3 @@
 go-example/
+__pycache__/
+.vscode/

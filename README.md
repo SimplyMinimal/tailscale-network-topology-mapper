@@ -31,3 +31,6 @@ Pull requests welcome! :)
 ## Experimental Ideas and TODOs
 * Use `tailscale debug netmap` to build a more in-depth map
 * Allow switching between layers such as port level, host level, user/group level
+
+### Disclaimer:
+This project is an independent creation and is not affiliated with Tailscale or its affiliates. It is solely intended as an expansion upon Tailscale's tools.

@@ -16,7 +16,7 @@ def main():
         return
 
     network_graph = NetworkGraph(parser.hosts, parser.groups)
-    network_graph.build_graph(parser.acls)
+    network_graph.build_graph(parser.acls, parser.grants)
 
     renderer = Renderer(network_graph)
     renderer.render_to_html("network_topology.html")

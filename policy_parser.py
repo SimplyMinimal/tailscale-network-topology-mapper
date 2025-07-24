@@ -12,6 +12,7 @@ class PolicyParser:
         self.hosts: Dict[str, str] = {}
         self.tag_owners: Dict[str, List[str]] = {}
         self.acls: List[Dict[str, Union[str, List[str]]]] = []
+        self.grants: List[Dict[str, Union[str, List[str]]]] = []
 
     def load_json_or_hujson(self, filename: str) -> Any:
         try:
@@ -35,3 +36,4 @@ class PolicyParser:
         self.hosts = policy_data.get("hosts", {})
         self.tag_owners = policy_data.get("tagOwners", {})
         self.acls = policy_data.get("acls", [])
+        self.grants = policy_data.get("grants", [])

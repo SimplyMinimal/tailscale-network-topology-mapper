@@ -1,4 +1,6 @@
+import logging
 from typing import Dict, List, Set, Tuple, Union
+import pdb
 
 from config import COMPANY_DOMAIN
 
@@ -9,21 +11,29 @@ class NetworkGraph:
         self.groups = groups
         self.nodes: Set[Tuple[str, str, str]] = set()
         self.edges: List[Tuple[str, str]] = []
+        logging.debug(f"NetworkGraph initialized with {len(hosts)} hosts and {len(groups)} groups")
 
     def add_node(self, node: str, color: str, tooltip_text: str) -> None:
         self.nodes.add((node, color, tooltip_text))
+        logging.debug(f"Added node: {node} (color: {color})")
 
     def add_edge(self, src: str, dst: str) -> None:
         self.edges.append((src, dst))
+        logging.debug(f"Added edge: {src} -> {dst}")
 
     def build_graph(self, acls: List[Dict[str, List[str]]], grants: List[Dict[str, List[str]]] = None) -> None:
         if grants is None:
             grants = []
+        
+        logging.debug(f"Building graph from {len(acls)} ACLs and {len(grants)} grants")
             
         # Process legacy ACLs
-        for rule in acls:
+        logging.debug("Processing legacy ACL rules")
+        for i, rule in enumerate(acls):
+            logging.debug(f"Processing ACL rule {i+1}: {rule}")
             src_nodes = self._resolve_nodes(rule["src"])
             dst_nodes = self._resolve_nodes(rule["dst"])
+            logging.debug(f"ACL {i+1} resolved to {len(src_nodes)} source nodes and {len(dst_nodes)} destination nodes")
 
             for src in src_nodes:
                 src_tooltip = self._get_node_tooltip(src)
@@ -38,9 +48,12 @@ class NetworkGraph:
                     self.add_edge(src, dst)
         
         # Process modern grants
-        for grant in grants:
+        logging.debug("Processing modern grant rules")
+        for i, grant in enumerate(grants):
+            logging.debug(f"Processing grant rule {i+1}: {grant}")
             src_nodes = self._resolve_nodes(grant["src"])
             dst_nodes = self._resolve_grant_destinations(grant)
+            logging.debug(f"Grant {i+1} resolved to {len(src_nodes)} source nodes and {len(dst_nodes)} destination nodes")
 
             for src in src_nodes:
                 src_tooltip = self._get_grant_src_tooltip(src, grant)
@@ -53,11 +66,15 @@ class NetworkGraph:
             for src in src_nodes:
                 for dst in dst_nodes:
                     self.add_edge(src, dst)
+        
+        logging.debug("Graph building completed")
 
     def _resolve_nodes(self, nodes: List[str]) -> Set[str]:
+        logging.debug(f"Resolving nodes: {nodes}")
         resolved_nodes: Set[str] = set()
         for node in nodes:
             resolved_nodes.add(node)
+            logging.debug(f"Resolved node: {node}")
             # if node.startswith("tag:"):
             #     resolved_nodes.add(node)
             # elif node.startswith("autogroup:"):
@@ -66,6 +83,7 @@ class NetworkGraph:
             #     resolved_nodes.add(node)
             # else:
             #     resolved_nodes.add(node.split(":")[0])
+        logging.debug(f"Total resolved nodes: {len(resolved_nodes)}")
         return resolved_nodes
 
     def _get_node_color(self, node: str) -> str:
@@ -77,19 +95,28 @@ class NetworkGraph:
             return "#ff6666"  # Red for hosts
 
     def _resolve_grant_destinations(self, grant: Dict[str, Union[str, List[str]]]) -> Set[str]:
+        logging.debug(f"Resolving grant destinations for: {grant}")
         dst_nodes = self._resolve_nodes(grant["dst"])
         
         # Handle IP protocol specifications
         if "ip" in grant and grant["ip"] != ["*"]:
+            logging.debug(f"Processing IP specifications: {grant['ip']}")
             enhanced_dst_nodes = set()
+            #TODO: Fix this / It should either return a single port or report that there are multiple if multiple ports are defined
             for dst in dst_nodes:
                 for ip_spec in grant["ip"]:
                     if ":" in ip_spec:  # Port specification like "tcp:443"
-                        enhanced_dst_nodes.add(f"{dst}:{ip_spec}")
+                        enhanced_node = f"{dst}:{ip_spec}"
+                        enhanced_dst_nodes.add(enhanced_node)
+                        logging.debug(f"Enhanced destination with port: {enhanced_node}")
                     else:  # Protocol specification like "tcp"
-                        enhanced_dst_nodes.add(f"{dst}:{ip_spec}")
+                        enhanced_node = f"{dst}:{ip_spec}"
+                        enhanced_dst_nodes.add(enhanced_node)
+                        logging.debug(f"Enhanced destination with protocol: {enhanced_node}")
+            logging.debug(f"Grant destinations enhanced to: {enhanced_dst_nodes}")
             return enhanced_dst_nodes
         
+        logging.debug(f"Grant destinations (no IP enhancement): {dst_nodes}")
         return dst_nodes
 
     def _get_grant_src_tooltip(self, node: str, grant: Dict[str, Union[str, List[str]]]) -> str:

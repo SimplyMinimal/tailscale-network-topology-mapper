@@ -1,5 +1,5 @@
 # Tailscale Network Topology Mapper
-### A visual way to view your ACL rules for Tailscale
+### A visual way to view your ACL and Grant rules for Tailscale
 I occasionally find myself just wanting to get a glance of how my ACL rules look without reading through the code. This is also useful for showing how our policies are set up to people who are not devs by trade.
 
 ![alt text](./images/Animation.gif)
@@ -23,14 +23,16 @@ If you would like to have the network map be automatically updated whenever you 
 
 ## Limitations
 * This project is in an early alpha stage.
-* It can only map what is available in the ACL policy file. It is not an active scanning tool that will seek out other hosts.
-* It only focuses on the ACL rules themselves but eventually this may start capturing ALL the available valid ACL sections.
+* It can only map what is available in the Tailscale 'policy.hujson' policy file. It is not an active scanning tool that will seek out other hosts.
+* It only focuses on the ACL/Grant rules themselves but eventually this may start capturing ALL the available valid Tailscale sections.
 
 Pull requests welcome! :) 
 
 ## Experimental Ideas and TODOs
 * Use `tailscale debug netmap` to build a more in-depth map
 * Allow switching between layers such as port level, host level, user/group level
+* Enhanced searching by keyword
+* Improve overall site design
 
 ### Disclaimer:
 This project is an independent creation and is not affiliated with Tailscale or its partners. It is solely intended as an expansion upon Tailscale's tools.

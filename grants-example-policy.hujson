@@ -1,0 +1,174 @@
+// Comprehensive example policy file demonstrating Tailscale grants
+// Based on https://tailscale.com/kb/1458/grant-examples
+{
+	// Define user groups
+	"groups": {
+		"group:admin": ["admin@company.com"],
+		"group:eng": ["dev1@company.com", "dev2@company.com"],
+		"group:sales": ["sales1@company.com", "sales2@company.com"],
+		"group:nyc": ["nyc-user@company.com"],
+		"group:contractors": ["contractor@external.com"],
+		"group:mobile": ["mobile@company.com"]
+	},
+
+	// Define host mappings
+	"hosts": {
+		"web-server": "100.64.1.10",
+		"database": "100.64.1.20",
+		"api-gateway": "100.64.1.30",
+		"logging-server": "100.64.1.40",
+		"internal-tool": "100.64.1.50",
+		"exit-node-nyc": "100.64.1.100"
+	},
+
+	// Define tag owners
+	"tagOwners": {
+		"tag:frontend": ["admin@company.com", "dev1@company.com"],
+		"tag:backend": ["admin@company.com", "dev1@company.com"],
+		"tag:logging": ["admin@company.com"],
+		"tag:internal-tools": ["admin@company.com"],
+		"tag:exit-node-nyc": ["admin@company.com"],
+		"tag:production": ["admin@company.com"],
+		"tag:staging": ["admin@company.com", "dev1@company.com"]
+	},
+
+	// Define device postures
+	"postures": {
+		"posture:latestMac": [
+			"node:os == 'macOS' && node:osVersion >= '13.0'"
+		],
+		"posture:complianceDevice": [
+			"node:tailscaleVersion >= '1.50.0'",
+			"node:os in ['macOS', 'Windows', 'Linux']"
+		]
+	},
+
+	// Modern grants section with comprehensive examples
+	"grants": [
+		// Example 1: Allow all traffic (basic grant)
+		{
+			"src": ["*"],
+			"dst": ["*"],
+			"ip": ["*"]
+		},
+
+		// Example 2: User self-access
+		{
+			"src": ["autogroup:member"],
+			"dst": ["autogroup:self"],
+			"ip": ["*"]
+		},
+
+		// Example 3: Exit node access for internet
+		{
+			"src": ["autogroup:member"],
+			"dst": ["autogroup:internet"],
+			"ip": ["*"]
+		},
+
+		// Example 4: Tagged component communication (microservices)
+		{
+			"src": ["tag:frontend"],
+			"dst": ["tag:backend"],
+			"ip": ["tcp:8080", "tcp:443"]
+		},
+		{
+			"src": ["tag:backend"],
+			"dst": ["tag:logging"],
+			"ip": ["tcp:514", "udp:514"]
+		},
+
+		// Example 5: Group-based access with port restrictions
+		{
+			"src": ["group:eng"],
+			"dst": ["tag:internal-tools"],
+			"ip": ["*"]
+		},
+		{
+			"src": ["group:sales"],
+			"dst": ["tag:internal-tools"],
+			"ip": ["tcp:443", "tcp:22"]
+		},
+
+		// Example 6: Location-based exit node routing
+		{
+			"src": ["group:nyc"],
+			"dst": ["autogroup:internet"],
+			"via": ["tag:exit-node-nyc"],
+			"ip": ["*"]
+		},
+
+		// Example 7: Device posture access control
+		{
+			"src": ["group:mobile"],
+			"dst": ["tag:production"],
+			"srcPosture": ["posture:latestMac"],
+			"ip": ["tcp:443"]
+		},
+
+		// Example 8: Application peering with specific protocols
+		{
+			"src": ["tag:frontend"],
+			"dst": ["tag:backend"],
+			"app": ["webapp-connector"],
+			"ip": ["tcp:8080", "tcp:9090"]
+		},
+
+		// Example 9: Admin access with compliance requirements
+		{
+			"src": ["group:admin"],
+			"dst": ["tag:production"],
+			"srcPosture": ["posture:complianceDevice"],
+			"ip": ["*"]
+		},
+
+		// Example 10: Contractor access through jump host
+		{
+			"src": ["group:contractors"],
+			"dst": ["tag:staging"],
+			"via": ["internal-tool"],
+			"ip": ["tcp:22", "tcp:80"]
+		},
+
+		// Example 11: Complex routing with multiple constraints
+		{
+			"src": ["group:eng"],
+			"dst": ["database"],
+			"via": ["api-gateway"],
+			"srcPosture": ["posture:complianceDevice"],
+			"ip": ["tcp:5432", "tcp:3306"]
+		},
+
+		// Example 12: Service mesh communication
+		{
+			"src": ["tag:backend"],
+			"dst": ["tag:backend"],
+			"app": ["service-mesh"],
+			"ip": ["tcp:15000-15010", "tcp:9080"]
+		},
+
+		// Example 13: Monitoring access with UDP protocols
+		{
+			"src": ["tag:logging"],
+			"dst": ["tag:frontend", "tag:backend"],
+			"ip": ["udp:161", "tcp:9100", "tcp:8080"]
+		},
+
+		// Example 14: Emergency admin backdoor
+		{
+			"src": ["group:admin"],
+			"dst": ["*"],
+			"ip": ["tcp:22"]
+		},
+
+		// Example 15: Cross-environment communication
+		{
+			"src": ["tag:staging"],
+			"dst": ["tag:production"],
+			"via": ["api-gateway"],
+			"srcPosture": ["posture:complianceDevice"],
+			"app": ["deployment-pipeline"],
+			"ip": ["tcp:443", "tcp:8443"]
+		}
+	]
+}

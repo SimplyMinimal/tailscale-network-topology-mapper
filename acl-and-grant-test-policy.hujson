@@ -1,0 +1,285 @@
+// Combined ACL and Grants Policy File
+// Merging legacy ACLs with modern grants for testing
+{
+	// Declare static groups of users - combined from both policies
+	"groups": {
+		// System and Infrastructure teams
+		"group:system_admin": [
+			"sysadmin1@example.com",
+			"sysadmin2@example.com"
+		],
+		"group:dba": ["dba1@example.com"],
+		"group:sre": ["sre@example.com"],
+		"group:all staff": ["all staff@example.com"],
+		"group:dev team": ["dev team@example.com"],
+
+		// Additional groups from grants policy
+		"group:admin": ["admin@company.com"],
+		"group:eng": ["dev1@company.com", "dev2@company.com"],
+		"group:sales": ["sales1@company.com", "sales2@company.com"],
+		"group:nyc": ["nyc-user@company.com"],
+		"group:contractors": ["contractor@external.com"],
+		"group:mobile": ["mobile@company.com"]
+	},
+
+	// Combined host mappings
+	"hosts": {
+		// Legacy hosts
+		"uat1": "100.101.102.103",
+		"production-backend": "104.105.106.0/24",
+		"web-server": "108.109.110.112",
+
+		// Modern hosts
+		"database": "100.64.1.20",
+		"api-gateway": "100.64.1.30",
+		"logging-server": "100.64.1.40",
+		"internal-tool": "100.64.1.50",
+		"exit-node-nyc": "100.64.1.100"
+	},
+
+	// Combined tag definitions
+	"tagOwners": {
+		// Legacy resource tags
+		"tag:webserver": [],
+		"tag:database": ["johndoe@example.com"],
+		"tag:domain-controller": ["janedoe@example.com"],
+		"tag:production": ["infrastructure@example.com"],
+		"tag:linux-server": ["johndoe@example.com"],
+		"tag:windows-server": ["janedoe@example.com"],
+		"tag:security": ["johndoe@example.com"],
+		"tag:ci": ["johndoe@example.com"],
+		"tag:prod": [],
+
+		// Modern application tags
+		"tag:frontend": ["admin@company.com", "dev1@company.com"],
+		"tag:backend": ["admin@company.com", "dev1@company.com"],
+		"tag:logging": ["admin@company.com"],
+		"tag:internal-tools": ["admin@company.com"],
+		"tag:exit-node-nyc": ["admin@company.com"],
+		"tag:staging": ["admin@company.com", "dev1@company.com"]
+	},
+
+	// Device posture definitions
+	"postures": {
+		"posture:latestMac": [
+			"node:os == 'macOS' && node:osVersion >= '13.0'"
+		],
+		"posture:complianceDevice": [
+			"node:tailscaleVersion >= '1.50.0'",
+			"node:os in ['macOS', 'Windows', 'Linux']"
+		]
+	},
+
+	// Legacy ACL rules
+	"acls": [
+		// Security appliance access
+		{
+			"action": "accept",
+			"src": ["tag:security"],
+			"dst": ["*:*"]
+		},
+
+		// System admin access
+		{
+			"action": "accept",
+			"src": ["group:system_admin"],
+			"dst": ["*:*"]
+		},
+
+		// Self-device access
+		{
+			"action": "accept",
+			"src": ["autogroup:member"],
+			"dst": ["autogroup:self:*"]
+		},
+
+		// Domain controller access
+		{
+			"action": "accept",
+			"src": ["group:all staff"],
+			"dst": ["tag:domain-controller:*"]
+		},
+		{
+			"action": "accept",
+			"src": ["tag:domain-controller"],
+			"dst": ["group:all staff:*"]
+		},
+		{
+			"action": "accept",
+			"src": ["tag:domain-controller"],
+			"dst": ["tag:domain-controller:*"]
+		},
+
+		// Database access
+		{
+			"action": "accept",
+			"src": ["group:dba", "tag:database"],
+			"dst": ["tag:database:5432"]
+		},
+
+		// Development pipeline access
+		{
+			"action": "accept",
+			"src": ["group:dev team", "tag:ci"],
+			"dst": ["uat1:22"]
+		},
+
+		// Production access
+		{
+			"action": "accept",
+			"src": ["tag:prod"],
+			"dst": ["tag:prod:*"]
+		},
+
+		// Web and database access
+		{
+			"action": "accept",
+			"src": ["tag:webserver", "group:sre"],
+			"dst": ["tag:database:*"]
+		},
+		{
+			"action": "accept",
+			"src": ["tag:webserver"],
+			"dst": ["web-server:443"]
+		},
+
+		// SRE access
+		{
+			"action": "accept",
+			"src": ["group:sre"],
+			"dst": [
+				"tag:database:*",
+				"tag:webserver",
+				"web-server:443",
+				"production-backend:*",
+				"uat1:22"
+			]
+		}
+	],
+
+	// Modern grants section
+	"grants": [
+		// Basic access grants
+		{
+			"src": ["*"],
+			"dst": ["*"],
+			"ip": ["*"]
+		},
+		{
+			"src": ["autogroup:member"],
+			"dst": ["autogroup:self"],
+			"ip": ["*"]
+		},
+		{
+			"src": ["autogroup:member"],
+			"dst": ["autogroup:internet"],
+			"ip": ["*"]
+		},
+
+		// Microservices communication
+		{
+			"src": ["tag:frontend"],
+			"dst": ["tag:backend"],
+			"ip": ["tcp:8080", "tcp:443"]
+		},
+		{
+			"src": ["tag:backend"],
+			"dst": ["tag:logging"],
+			"ip": ["tcp:514", "udp:514"]
+		},
+
+		// Group access controls
+		{
+			"src": ["group:eng"],
+			"dst": ["tag:internal-tools"],
+			"ip": ["*"]
+		},
+		{
+			"src": ["group:sales"],
+			"dst": ["tag:internal-tools"],
+			"ip": ["tcp:443", "tcp:22"]
+		},
+
+		// Location-based routing
+		{
+			"src": ["group:nyc"],
+			"dst": ["autogroup:internet"],
+			"via": ["tag:exit-node-nyc"],
+			"ip": ["*"]
+		},
+
+		// Device posture controls
+		{
+			"src": ["group:mobile"],
+			"dst": ["tag:production"],
+			"srcPosture": ["posture:latestMac"],
+			"ip": ["tcp:443"]
+		},
+
+		// Application specific access
+		{
+			"src": ["tag:frontend"],
+			"dst": ["tag:backend"],
+			"app": ["webapp-connector"],
+			"ip": ["tcp:8080", "tcp:9090"]
+		},
+
+		// Admin compliance access
+		{
+			"src": ["group:admin"],
+			"dst": ["tag:production"],
+			"srcPosture": ["posture:complianceDevice"],
+			"ip": ["*"]
+		},
+
+		// Contractor access
+		{
+			"src": ["group:contractors"],
+			"dst": ["tag:staging"],
+			"via": ["internal-tool"],
+			"ip": ["tcp:22", "tcp:80"]
+		},
+
+		// Complex routing rules
+		{
+			"src": ["group:eng"],
+			"dst": ["database"],
+			"via": ["api-gateway"],
+			"srcPosture": ["posture:complianceDevice"],
+			"ip": ["tcp:5432", "tcp:3306"]
+		},
+
+		// Service mesh
+		{
+			"src": ["tag:backend"],
+			"dst": ["tag:backend"],
+			"app": ["service-mesh"],
+			"ip": ["tcp:15000-15010", "tcp:9080"]
+		},
+
+		// Monitoring access
+		{
+			"src": ["tag:logging"],
+			"dst": ["tag:frontend", "tag:backend"],
+			"ip": ["udp:161", "tcp:9100", "tcp:8080"]
+		},
+
+		// Emergency access
+		{
+			"src": ["group:admin"],
+			"dst": ["*"],
+			"ip": ["tcp:22"]
+		},
+
+		// Cross-environment deployment
+		{
+			"src": ["tag:staging"],
+			"dst": ["tag:production"],
+			"via": ["api-gateway"],
+			"srcPosture": ["posture:complianceDevice"],
+			"app": ["deployment-pipeline"],
+			"ip": ["tcp:443", "tcp:8443"]
+		}
+	]
+}
+

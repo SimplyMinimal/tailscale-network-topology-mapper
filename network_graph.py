@@ -119,15 +119,34 @@ class NetworkGraph:
             logging.debug(f"Processing IP specifications: {grant['ip']}")
             enhanced_dst_nodes = set()
             for dst in dst_nodes:
-                for ip_spec in grant["ip"]:
-                    if ":" in ip_spec:  # Port specification like "tcp:443"
-                        enhanced_node = f"{dst}:{ip_spec}"
-                        enhanced_dst_nodes.add(enhanced_node)
-                        logging.debug(f"Enhanced destination with port: {enhanced_node}")
-                    else:  # Protocol specification like "tcp"
-                        enhanced_node = f"{dst}:{ip_spec}"
-                        enhanced_dst_nodes.add(enhanced_node)
-                        logging.debug(f"Enhanced destination with protocol: {enhanced_node}")
+                # Format protocols more readably
+                ip_specs = []
+                current_proto = None
+                ports = []
+                
+                for spec in grant["ip"]:
+                    if ":" in spec:
+                        proto, port = spec.split(":", 1)
+                        if proto != current_proto:
+                            if current_proto and ports:
+                                ip_specs.append(f"{current_proto}:{','.join(ports)}")
+                                ports = []
+                            current_proto = proto
+                        ports.append(port)
+                    else:
+                        if current_proto and ports:
+                            ip_specs.append(f"{current_proto}:{','.join(ports)}")
+                        ip_specs.append(spec)
+                        current_proto = None
+                        ports = []
+                
+                if current_proto and ports:
+                    ip_specs.append(f"{current_proto}:{','.join(ports)}")
+                
+                # Create enhanced node with consolidated protocols
+                enhanced_node = f"{dst} [{', '.join(ip_specs)}]"
+                enhanced_dst_nodes.add(enhanced_node)
+                logging.debug(f"Enhanced destination with protocols: {enhanced_node}")
             logging.debug(f"Grant destinations enhanced to: {enhanced_dst_nodes}")
             return enhanced_dst_nodes
         

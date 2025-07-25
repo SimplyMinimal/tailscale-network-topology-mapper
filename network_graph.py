@@ -98,7 +98,7 @@ class NetworkGraph:
         # Add posture check information if present
         if "srcPosture" in grant:
             posture_info = ", ".join(grant["srcPosture"])
-            base_tooltip += f" | Posture: {posture_info}"
+            base_tooltip += f"\nPosture: {posture_info}"
         
         return base_tooltip
 
@@ -108,17 +108,17 @@ class NetworkGraph:
         # Add IP protocol information if present
         if "ip" in grant and grant["ip"] != ["*"]:
             ip_info = ", ".join(grant["ip"])
-            base_tooltip += f" | Protocols: {ip_info}"
+            base_tooltip += f"\nProtocols: {ip_info}"
         
         # Add via routing information if present
         if "via" in grant:
             via_info = ", ".join(grant["via"])
-            base_tooltip += f" | Via: {via_info}"
+            base_tooltip += f"\nVia: {via_info}"
         
         # Add app information if present
         if "app" in grant:
             app_info = ", ".join(grant["app"]) if isinstance(grant["app"], list) else grant["app"]
-            base_tooltip += f" | App: {app_info}"
+            base_tooltip += f"\nApp: {app_info}"
         
         return base_tooltip
 

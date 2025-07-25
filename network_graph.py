@@ -1,27 +1,50 @@
 import logging
 from typing import Dict, List, Set, Tuple, Union
-import pdb
 
-from config import COMPANY_DOMAIN
+from config import COMPANY_DOMAIN, NODE_COLORS
 
 
 class NetworkGraph:
-    def __init__(self, hosts: Dict[str, str], groups: Dict[str, List[str]]):
+    """
+    Builds a network graph from Tailscale policy rules (ACLs and grants).
+    
+    Creates nodes and edges representing network access relationships,
+    with support for modern grant features like IP protocols, via routing,
+    posture checks, and application-specific access controls.
+    """
+    
+    def __init__(self, hosts: Dict[str, str], groups: Dict[str, List[str]]) -> None:
+        """
+        Initialize the network graph builder.
+        
+        Args:
+            hosts: Mapping of host names to IP addresses
+            groups: Mapping of group names to member lists
+        """
         self.hosts = hosts
         self.groups = groups
-        self.nodes: Set[Tuple[str, str, str]] = set()
-        self.edges: List[Tuple[str, str]] = []
+        self.nodes: Set[Tuple[str, str, str]] = set()  # (node_id, color, tooltip)
+        self.edges: List[Tuple[str, str]] = []  # (source, destination)
         logging.debug(f"NetworkGraph initialized with {len(hosts)} hosts and {len(groups)} groups")
 
     def add_node(self, node: str, color: str, tooltip_text: str) -> None:
+        """Add a node to the graph with specified color and tooltip."""
         self.nodes.add((node, color, tooltip_text))
         logging.debug(f"Added node: {node} (color: {color})")
 
     def add_edge(self, src: str, dst: str) -> None:
+        """Add a directed edge from source to destination node."""
         self.edges.append((src, dst))
         logging.debug(f"Added edge: {src} -> {dst}")
 
-    def build_graph(self, acls: List[Dict[str, List[str]]], grants: List[Dict[str, List[str]]] = None) -> None:
+    def build_graph(self, acls: List[Dict[str, List[str]]], grants: List[Dict[str, Union[str, List[str]]]] = None) -> None:
+        """
+        Build the network graph from ACL rules and grant rules.
+        
+        Args:
+            acls: List of legacy ACL rules with src/dst fields
+            grants: List of modern grant rules with extended features (optional)
+        """
         if grants is None:
             grants = []
         
@@ -75,24 +98,17 @@ class NetworkGraph:
         for node in nodes:
             resolved_nodes.add(node)
             logging.debug(f"Resolved node: {node}")
-            # if node.startswith("tag:"):
-            #     resolved_nodes.add(node)
-            # elif node.startswith("autogroup:"):
-            #     resolved_nodes.add(node)
-            # elif node.startswith("group:"):
-            #     resolved_nodes.add(node)
-            # else:
-            #     resolved_nodes.add(node.split(":")[0])
         logging.debug(f"Total resolved nodes: {len(resolved_nodes)}")
         return resolved_nodes
 
     def _get_node_color(self, node: str) -> str:
+        """Determine the color for a node based on its type."""
         if node.startswith("tag:"):
-            return "#00cc66"  # Green for tags
+            return NODE_COLORS["tag"]
         elif COMPANY_DOMAIN in node or node.startswith("autogroup:") or node.startswith("group:"):
-            return "#FFFF00"  # Yellow for groups
+            return NODE_COLORS["group"]
         else:
-            return "#ff6666"  # Red for hosts
+            return NODE_COLORS["host"]
 
     def _resolve_grant_destinations(self, grant: Dict[str, Union[str, List[str]]]) -> Set[str]:
         logging.debug(f"Resolving grant destinations for: {grant}")
@@ -102,7 +118,6 @@ class NetworkGraph:
         if "ip" in grant and grant["ip"] != ["*"]:
             logging.debug(f"Processing IP specifications: {grant['ip']}")
             enhanced_dst_nodes = set()
-            #TODO: Fix this / It should either return a single port or report that there are multiple if multiple ports are defined
             for dst in dst_nodes:
                 for ip_spec in grant["ip"]:
                     if ":" in ip_spec:  # Port specification like "tcp:443"

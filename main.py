@@ -4,6 +4,7 @@ import argparse
 from policy_parser import PolicyParser
 from network_graph import NetworkGraph
 from renderer import Renderer
+from config import LOG_FORMAT
 
 
 def main():
@@ -14,7 +15,7 @@ def main():
     log_level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(
         level=log_level,
-        format="%(levelname)s [%(filename)s:%(lineno)d]: %(message)s"
+        format=LOG_FORMAT
     )
     
     logging.info("Starting Tailscale Network Topology Mapper")

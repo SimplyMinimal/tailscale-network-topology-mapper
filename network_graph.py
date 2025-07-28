@@ -43,6 +43,11 @@ class NetworkGraph(NetworkGraphInterface):
         """
         Build the network graph from ACL rules and grant rules with optimized performance.
 
+        Tracks which nodes appear in ACLs vs grants to assign appropriate shapes:
+        - Dot (●) for ACL-only nodes
+        - Triangle (▲) for Grant-only nodes
+        - Hexagon (⬢) for nodes referenced in both ACL and Grant rules
+
         Args:
             acls: List of legacy ACL rules with src/dst fields
             grants: List of modern grant rules with extended features (optional)
@@ -56,15 +61,42 @@ class NetworkGraph(NetworkGraphInterface):
         all_nodes: Dict[str, Tuple[str, str, str]] = {}  # node_id -> (color, tooltip, shape)
         all_edges: Set[Tuple[str, str]] = set()  # Deduplicated edges
 
+        # Track which nodes appear in ACLs vs grants for shape assignment
+        acl_nodes: Set[str] = set()
+        grant_nodes: Set[str] = set()
+
         # Process legacy ACLs in batch
         logging.debug("Processing legacy ACL rules")
-        acl_edges = self._process_acls_batch(acls, all_nodes)
+        acl_edges = self._process_acls_batch(acls, all_nodes, acl_nodes)
         all_edges.update(acl_edges)
 
         # Process modern grants in batch
         logging.debug("Processing modern grant rules")
-        grant_edges = self._process_grants_batch(grants, all_nodes)
+        grant_edges = self._process_grants_batch(grants, all_nodes, grant_nodes)
         all_edges.update(grant_edges)
+
+        # Identify nodes that appear in both ACLs and grants for hexagon shape
+        mixed_nodes = acl_nodes.intersection(grant_nodes)
+        logging.debug(f"Found {len(mixed_nodes)} nodes referenced in both ACL and Grant rules: {mixed_nodes}")
+
+        # Update shapes and tooltips for mixed nodes (including enhanced versions)
+        for node_id in mixed_nodes:
+            # Update the base node if it exists
+            if node_id in all_nodes:
+                color, tooltip, _ = all_nodes[node_id]
+                # Enhance tooltip to indicate mixed usage
+                enhanced_tooltip = f"{tooltip} (Referenced in both ACL and Grant rules)"
+                all_nodes[node_id] = (color, enhanced_tooltip, "hexagon")
+                logging.debug(f"Updated node {node_id} to hexagon shape for mixed ACL/Grant usage")
+
+            # Also update any enhanced versions of this node (with protocol specifications)
+            for enhanced_node_id in list(all_nodes.keys()):
+                if enhanced_node_id.startswith(f"{node_id} [") and enhanced_node_id.endswith("]"):
+                    color, tooltip, _ = all_nodes[enhanced_node_id]
+                    # Enhance tooltip to indicate mixed usage
+                    enhanced_tooltip = f"{tooltip} (Referenced in both ACL and Grant rules)"
+                    all_nodes[enhanced_node_id] = (color, enhanced_tooltip, "hexagon")
+                    logging.debug(f"Updated enhanced node {enhanced_node_id} to hexagon shape for mixed ACL/Grant usage")
 
         # Batch add all nodes and edges
         for node_id, (color, tooltip, shape) in all_nodes.items():
@@ -73,9 +105,20 @@ class NetworkGraph(NetworkGraphInterface):
         self.edges.extend(list(all_edges))
 
         logging.debug(f"Graph building completed: {len(self.nodes)} nodes, {len(self.edges)} edges")
+        logging.debug(f"Node distribution - ACL-only: {len(acl_nodes - grant_nodes)}, Grant-only: {len(grant_nodes - acl_nodes)}, Mixed: {len(mixed_nodes)}")
 
-    def _process_acls_batch(self, acls: List[Dict], all_nodes: Dict[str, Tuple[str, str, str]]) -> Set[Tuple[str, str]]:
-        """Process ACL rules in batch for better performance."""
+    def _process_acls_batch(self, acls: List[Dict], all_nodes: Dict[str, Tuple[str, str, str]], acl_nodes: Set[str]) -> Set[Tuple[str, str]]:
+        """
+        Process ACL rules in batch for better performance.
+
+        Args:
+            acls: List of ACL rule dictionaries
+            all_nodes: Dictionary to store node information
+            acl_nodes: Set to track nodes that appear in ACL rules
+
+        Returns:
+            Set of edges created from ACL rules
+        """
         edges: Set[Tuple[str, str]] = set()
 
         for i, rule in enumerate(acls):
@@ -83,6 +126,10 @@ class NetworkGraph(NetworkGraphInterface):
 
             src_nodes = self._resolve_nodes(rule["src"])
             dst_nodes = self._resolve_nodes(rule["dst"])
+
+            # Track all nodes that appear in ACL rules
+            acl_nodes.update(src_nodes)
+            acl_nodes.update(dst_nodes)
 
             # Batch node creation
             for src in src_nodes:
@@ -107,8 +154,18 @@ class NetworkGraph(NetworkGraphInterface):
 
         return edges
 
-    def _process_grants_batch(self, grants: List[Dict], all_nodes: Dict[str, Tuple[str, str, str]]) -> Set[Tuple[str, str]]:
-        """Process grant rules in batch for better performance."""
+    def _process_grants_batch(self, grants: List[Dict], all_nodes: Dict[str, Tuple[str, str, str]], grant_nodes: Set[str]) -> Set[Tuple[str, str]]:
+        """
+        Process grant rules in batch for better performance.
+
+        Args:
+            grants: List of grant rule dictionaries
+            all_nodes: Dictionary to store node information
+            grant_nodes: Set to track nodes that appear in grant rules
+
+        Returns:
+            Set of edges created from grant rules
+        """
         edges: Set[Tuple[str, str]] = set()
 
         for i, grant in enumerate(grants):
@@ -116,6 +173,19 @@ class NetworkGraph(NetworkGraphInterface):
 
             src_nodes = self._resolve_nodes(grant["src"])
             dst_nodes = self._resolve_grant_destinations(grant)
+
+            # Track base node IDs (without protocol enhancements) for intersection logic
+            grant_nodes.update(src_nodes)
+            # For destination nodes, extract base node IDs by removing protocol enhancements
+            base_dst_nodes = set()
+            for dst in dst_nodes:
+                # Extract base node ID by removing protocol enhancement (e.g., "node [tcp:443]" -> "node")
+                if " [" in dst and dst.endswith("]"):
+                    base_node = dst.split(" [")[0]
+                    base_dst_nodes.add(base_node)
+                else:
+                    base_dst_nodes.add(dst)
+            grant_nodes.update(base_dst_nodes)
 
             # Batch node creation
             for src in src_nodes:

@@ -63,21 +63,53 @@ class Renderer(RendererInterface):
 
 
     def _add_legend(self) -> None:
-        """Add a color-coded legend to the HTML visualization."""
+        """
+        Add a comprehensive legend to the HTML visualization.
+
+        Includes both color coding for node types and shape coding for rule types:
+        - Colors: Yellow (groups), Green (tags), Red (hosts)
+        - Shapes: Dot (ACL-only), Triangle (Grant-only), Hexagon (both ACL and Grant)
+        """
         logging.debug("Creating legend HTML")
         group_color = NODE_COLORS["group"]
         tag_color = NODE_COLORS["tag"]
         host_color = NODE_COLORS["host"]
 
         legend_html = """
-<div style="position: absolute; top: 10px; right: 10px; background-color: #f5f5f5; padding: 10px; border: 1px solid #ccc;">
-    <h3>Legend</h3>
-    <div style="background-color: {group_color}; width: 20px; height: 20px; display: inline-block;"></div>
-    <span>Group</span><br>
-    <div style="background-color: {tag_color}; width: 20px; height: 20px; display: inline-block;"></div>
-    <span>Tag</span><br>
-    <div style="background-color: {host_color}; width: 20px; height: 20px; display: inline-block;"></div>
-    <span>Host</span>
+<div style="position: absolute; top: 10px; right: 10px; background-color: #f5f5f5; padding: 15px; border: 1px solid #ccc; border-radius: 5px; font-family: Arial, sans-serif; font-size: 12px; max-width: 250px;">
+    <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 14px;">Legend</h3>
+
+    <div style="margin-bottom: 15px;">
+        <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold;">Node Types (Colors)</h4>
+        <div style="margin-bottom: 5px;">
+            <div style="background-color: {group_color}; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border: 1px solid #999;"></div>
+            <span>Groups</span>
+        </div>
+        <div style="margin-bottom: 5px;">
+            <div style="background-color: {tag_color}; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border: 1px solid #999;"></div>
+            <span>Tags</span>
+        </div>
+        <div style="margin-bottom: 5px;">
+            <div style="background-color: {host_color}; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border: 1px solid #999;"></div>
+            <span>Hosts</span>
+        </div>
+    </div>
+
+    <div>
+        <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold;">Rule Types (Shapes)</h4>
+        <div style="margin-bottom: 5px;">
+            <span style="font-size: 16px; margin-right: 8px;">●</span>
+            <span>ACL rules only</span>
+        </div>
+        <div style="margin-bottom: 5px;">
+            <span style="font-size: 16px; margin-right: 8px;">▲</span>
+            <span>Grant rules only</span>
+        </div>
+        <div style="margin-bottom: 5px;">
+            <span style="font-size: 16px; margin-right: 8px;">⬢</span>
+            <span>Both ACL and Grant rules</span>
+        </div>
+    </div>
 </div>
 """.format(
             group_color=group_color, tag_color=tag_color, host_color=host_color

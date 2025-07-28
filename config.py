@@ -70,7 +70,7 @@ VISUALIZATION_CONFIG: Dict[str, Any] = {
     "width": "100%",
     "notebook": True,
     "directed": True,
-    "filter_menu": True,
+    "filter_menu": False,  # Disabled in favor of enhanced search
     "select_menu": True,
     "neighborhood_highlight": True,
     "cdn_resources": "remote"

@@ -33,6 +33,15 @@ class TestRenderer:
             ("node2", "#00FF00", "Test tooltip 2", "triangle")
         }
         mock_graph.edges = [("node1", "node2")]
+        mock_graph.get_search_metadata.return_value = {
+            "nodes": {
+                "node1": {"node_id": "node1", "rule_type": "ACL", "protocols": [], "via": [], "posture": [], "apps": []},
+                "node2": {"node_id": "node2", "rule_type": "Grant", "protocols": ["tcp:443"], "via": [], "posture": [], "apps": []}
+            },
+            "edges": {
+                "node1->node2": {"src": "node1", "dst": "node2", "rule_type": "ACL", "protocols": [], "via": [], "posture": [], "apps": []}
+            }
+        }
         
         renderer = Renderer(mock_graph)
         
@@ -60,6 +69,7 @@ class TestRenderer:
         mock_graph = Mock(spec=NetworkGraph)
         mock_graph.nodes = set()
         mock_graph.edges = []
+        mock_graph.get_search_metadata.return_value = {"nodes": {}, "edges": {}}
         
         renderer = Renderer(mock_graph)
         
@@ -101,7 +111,7 @@ class TestRenderer:
         assert call_kwargs['height'] == "800px"
         assert call_kwargs['width'] == "100%"
         assert call_kwargs['directed'] is True
-        assert call_kwargs['filter_menu'] is True
+        assert call_kwargs['filter_menu'] is False  # Updated: now disabled in favor of enhanced search
         assert call_kwargs['select_menu'] is True
         assert call_kwargs['neighborhood_highlight'] is True
     
@@ -110,6 +120,7 @@ class TestRenderer:
         mock_graph = Mock(spec=NetworkGraph)
         mock_graph.nodes = set()
         mock_graph.edges = []
+        mock_graph.get_search_metadata.return_value = {"nodes": {}, "edges": {}}
         
         renderer = Renderer(mock_graph)
         
@@ -118,11 +129,12 @@ class TestRenderer:
         
         # Mock the Network.write_html method to avoid actual file operations
         with patch.object(renderer.net, 'write_html'):
-            with patch.object(renderer, '_add_legend'):
-                renderer.render_to_html("test_output.html")
-                
-                # Should be set after render_to_html call
-                assert renderer.output_file == "test_output.html"
+            with patch.object(renderer, '_add_enhanced_search'):
+                with patch.object(renderer, '_add_legend'):
+                    renderer.render_to_html("test_output.html")
+
+                    # Should be set after render_to_html call
+                    assert renderer.output_file == "test_output.html"
 
 
 if __name__ == "__main__":

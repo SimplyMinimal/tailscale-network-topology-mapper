@@ -18,7 +18,7 @@ class NetworkGraph(NetworkGraphInterface):
     def __init__(self, hosts: Dict[str, str], groups: Dict[str, List[str]]) -> None:
         """
         Initialize the network graph builder.
-        
+
         Args:
             hosts: Mapping of host names to IP addresses
             groups: Mapping of group names to member lists
@@ -27,6 +27,9 @@ class NetworkGraph(NetworkGraphInterface):
         self.groups = groups
         self.nodes: Set[Tuple[str, str, str, str]] = set()  # (node_id, color, tooltip, shape)
         self.edges: List[Tuple[str, str]] = []  # (source, destination)
+        # Store searchable metadata for enhanced search functionality
+        self.node_metadata: Dict[str, Dict[str, Union[str, List[str]]]] = {}  # node_id -> metadata
+        self.edge_metadata: Dict[Tuple[str, str], Dict[str, Union[str, List[str]]]] = {}  # edge -> metadata
         logging.debug(f"NetworkGraph initialized with {len(hosts)} hosts and {len(groups)} groups")
 
     def add_node(self, node: str, color: str, tooltip_text: str, shape: str = "dot") -> None:
@@ -131,7 +134,7 @@ class NetworkGraph(NetworkGraphInterface):
             acl_nodes.update(src_nodes)
             acl_nodes.update(dst_nodes)
 
-            # Batch node creation
+            # Store searchable metadata for nodes
             for src in src_nodes:
                 if src not in all_nodes:
                     all_nodes[src] = (
@@ -139,6 +142,20 @@ class NetworkGraph(NetworkGraphInterface):
                         self._get_node_tooltip(src),
                         "dot"
                     )
+                # Store searchable metadata
+                if src not in self.node_metadata:
+                    self.node_metadata[src] = {
+                        "node_id": src,
+                        "rule_type": "ACL",
+                        "src_rules": [],
+                        "dst_rules": [],
+                        "protocols": [],
+                        "via": [],
+                        "posture": [],
+                        "apps": [],
+                        "members": self._get_node_members(src)
+                    }
+                self.node_metadata[src]["src_rules"].append(f"ACL rule {i+1}")
 
             for dst in dst_nodes:
                 if dst not in all_nodes:
@@ -147,10 +164,38 @@ class NetworkGraph(NetworkGraphInterface):
                         self._get_node_tooltip(dst),
                         "dot"
                     )
+                # Store searchable metadata
+                if dst not in self.node_metadata:
+                    self.node_metadata[dst] = {
+                        "node_id": dst,
+                        "rule_type": "ACL",
+                        "src_rules": [],
+                        "dst_rules": [],
+                        "protocols": [],
+                        "via": [],
+                        "posture": [],
+                        "apps": [],
+                        "members": self._get_node_members(dst)
+                    }
+                self.node_metadata[dst]["dst_rules"].append(f"ACL rule {i+1}")
 
-            # Batch edge creation using set comprehension
-            rule_edges = {(src, dst) for src in src_nodes for dst in dst_nodes}
-            edges.update(rule_edges)
+            # Store edge metadata and create edges
+            for src in src_nodes:
+                for dst in dst_nodes:
+                    edge = (src, dst)
+                    edges.add(edge)
+                    # Store searchable edge metadata
+                    self.edge_metadata[edge] = {
+                        "src": src,
+                        "dst": dst,
+                        "rule_type": "ACL",
+                        "rule_index": i + 1,
+                        "action": rule.get("action", "accept"),
+                        "protocols": [],
+                        "via": [],
+                        "posture": [],
+                        "apps": []
+                    }
 
         return edges
 
@@ -187,7 +232,16 @@ class NetworkGraph(NetworkGraphInterface):
                     base_dst_nodes.add(dst)
             grant_nodes.update(base_dst_nodes)
 
-            # Batch node creation
+            # Extract grant metadata for searching
+            protocols = grant.get("ip", [])
+            via_routes = grant.get("via", [])
+            src_posture = grant.get("srcPosture", [])
+            dst_posture = grant.get("dstPosture", [])
+            apps = grant.get("app", [])
+            if isinstance(apps, str):
+                apps = [apps]
+
+            # Store searchable metadata for source nodes
             for src in src_nodes:
                 if src not in all_nodes:
                     all_nodes[src] = (
@@ -195,7 +249,29 @@ class NetworkGraph(NetworkGraphInterface):
                         self._get_grant_src_tooltip(src, grant),
                         "triangle"
                     )
+                # Store/update searchable metadata
+                if src not in self.node_metadata:
+                    self.node_metadata[src] = {
+                        "node_id": src,
+                        "rule_type": "Grant",
+                        "src_rules": [],
+                        "dst_rules": [],
+                        "protocols": [],
+                        "via": [],
+                        "posture": [],
+                        "apps": [],
+                        "members": self._get_node_members(src)
+                    }
+                elif self.node_metadata[src]["rule_type"] == "ACL":
+                    self.node_metadata[src]["rule_type"] = "Mixed"
 
+                self.node_metadata[src]["src_rules"].append(f"Grant rule {i+1}")
+                self.node_metadata[src]["protocols"].extend(protocols)
+                self.node_metadata[src]["via"].extend(via_routes)
+                self.node_metadata[src]["posture"].extend(src_posture)
+                self.node_metadata[src]["apps"].extend(apps)
+
+            # Store searchable metadata for destination nodes
             for dst in dst_nodes:
                 if dst not in all_nodes:
                     all_nodes[dst] = (
@@ -203,10 +279,45 @@ class NetworkGraph(NetworkGraphInterface):
                         self._get_grant_dst_tooltip(dst, grant),
                         "triangle"
                     )
+                # Store/update searchable metadata
+                base_dst = dst.split(" [")[0] if " [" in dst and dst.endswith("]") else dst
+                if base_dst not in self.node_metadata:
+                    self.node_metadata[base_dst] = {
+                        "node_id": base_dst,
+                        "rule_type": "Grant",
+                        "src_rules": [],
+                        "dst_rules": [],
+                        "protocols": [],
+                        "via": [],
+                        "posture": [],
+                        "apps": [],
+                        "members": self._get_node_members(base_dst)
+                    }
+                elif self.node_metadata[base_dst]["rule_type"] == "ACL":
+                    self.node_metadata[base_dst]["rule_type"] = "Mixed"
 
-            # Batch edge creation using set comprehension
-            rule_edges = {(src, dst) for src in src_nodes for dst in dst_nodes}
-            edges.update(rule_edges)
+                self.node_metadata[base_dst]["dst_rules"].append(f"Grant rule {i+1}")
+                self.node_metadata[base_dst]["protocols"].extend(protocols)
+                self.node_metadata[base_dst]["via"].extend(via_routes)
+                self.node_metadata[base_dst]["posture"].extend(dst_posture)
+                self.node_metadata[base_dst]["apps"].extend(apps)
+
+            # Store edge metadata and create edges
+            for src in src_nodes:
+                for dst in dst_nodes:
+                    edge = (src, dst)
+                    edges.add(edge)
+                    # Store searchable edge metadata
+                    self.edge_metadata[edge] = {
+                        "src": src,
+                        "dst": dst,
+                        "rule_type": "Grant",
+                        "rule_index": i + 1,
+                        "protocols": protocols,
+                        "via": via_routes,
+                        "posture": src_posture + dst_posture,
+                        "apps": apps
+                    }
 
         return edges
 
@@ -227,6 +338,21 @@ class NetworkGraph(NetworkGraphInterface):
             return NODE_COLORS["group"]
         else:
             return NODE_COLORS["host"]
+
+    def _get_node_members(self, node: str) -> List[str]:
+        """
+        Get the member list for a node if it's a group.
+
+        Args:
+            node: The node identifier
+
+        Returns:
+            List of group members if the node is a group, empty list otherwise
+        """
+        if node in self.groups:
+            return self.groups[node]
+        else:
+            return []
 
     def _resolve_grant_destinations(self, grant: Dict[str, Union[str, List[str]]]) -> Set[str]:
         logging.debug(f"Resolving grant destinations for: {grant}")
@@ -300,6 +426,18 @@ class NetworkGraph(NetworkGraphInterface):
             base_tooltip += f"\nApp: {app_info}"
         
         return base_tooltip
+
+    def get_search_metadata(self) -> Dict[str, Dict[str, Union[str, List[str]]]]:
+        """
+        Get searchable metadata for all nodes and edges.
+
+        Returns:
+            Dictionary containing searchable metadata for enhanced search functionality
+        """
+        return {
+            "nodes": self.node_metadata,
+            "edges": {f"{edge[0]}->{edge[1]}": metadata for edge, metadata in self.edge_metadata.items()}
+        }
 
     def _get_node_tooltip(self, node: str) -> str:
         if node.split(":")[0] in self.hosts:

@@ -1,0 +1,139 @@
+// THIS IS AN EXAMPLE POLICY FILE
+// PLEASE PROVIDE YOUR OWN POLICY FILE
+{
+	// Declare static groups of users.
+	"groups": {
+		//users that can access all resources
+		"group:system_admin": [
+			"sysadmin1@example.com",
+			"sysadmin2@example.com"
+		],
+
+		// Database Admins
+		"group:dba": ["dba1@example.com"],
+
+		// Site Reliability Engineers
+		"group:sre": ["sre@example.com"],
+
+		// General Employees
+		"group:all staff": ["all staff@example.com"],
+		"group:dev team": ["dev team@example.com"]
+	},
+
+	"hosts": {
+		"uat1":                  "100.101.102.103",
+		"production-backend":    "104.105.106.0/24",
+		"web-server":			 "108.109.110.112",
+	},
+
+	// **************************************
+	// ************* Tag Groups *************
+	//
+	// Define the tags which can be applied to devices and by which users.
+	"tagOwners": {
+		// Resources
+		"tag:webserver":		 [],
+		"tag:database":          ["johndoe@example.com"],
+		"tag:domain-controller": ["janedoe@example.com"],
+		"tag:production":        ["infrastructure@example.com"],
+		"tag:linux-server":      ["johndoe@example.com"],
+		"tag:windows-server":    ["janedoe@example.com"],
+		"tag:security":          ["johndoe@example.com"],
+		"tag:ci":                ["johndoe@example.com"],
+		"tag:prod":				 [],
+	},
+
+	// **************************************
+	// ************* ACL Access *************
+	//
+	"acls": [
+		// Give Security appliances access to network
+		{
+			"action": "accept",
+			"src":    ["tag:security"],
+			"dst":    ["*:*"],
+		},
+
+		// Allow all connections.
+		// INFR team can access anything
+		{
+			"action": "accept",
+			"src":    ["group:system_admin"],
+			"dst":    ["*:*"],
+		},
+
+		// all employees can access their own devices
+		{
+			"action": "accept",
+			"src":    ["autogroup:member"],
+			"dst":    ["autogroup:self:*"],
+		},
+
+		// All employees can reach the domain controller
+		// Domain Controller can hit all client machines
+		{
+			"action": "accept",
+			"src":    ["group:all staff"],
+			"dst":    ["tag:domain-controller:*"],
+		},
+		{
+			"action": "accept",
+			"src":    ["tag:domain-controller"],
+			"dst":    ["group:all staff:*"],
+		},
+
+		// allow domain controllers to talk to other domain controllers
+		{
+			"action": "accept",
+			"src":    ["tag:domain-controller"],
+			"dst":    ["tag:domain-controller:*"],
+		},
+
+		// Allow database access to dba
+		{
+			"action": "accept",
+			"src": ["group:dba", 
+					"tag:database"
+			],
+			"dst": ["tag:database:5432"],
+		},
+
+		// Grant Dev Team and their pipeline access
+		{
+			"action": "accept",
+			"src":    ["group:dev team" , "tag:ci"],
+			"dst": ["uat1:22"],
+		},
+
+		// Grant prod access to other resources tagged prod
+		{
+			"action": "accept",
+			"src": ["tag:prod"],
+			"dst": ["tag:prod:*"],
+		},
+
+		{
+			"action": "accept",
+			"src": ["tag:webserver", "group:sre"],
+			"dst": ["tag:database:*"],
+		},
+
+		{
+			"action": "accept",
+			"src": ["tag:webserver"],
+			"dst": ["web-server:443"],
+		},
+
+		{
+			"action": "accept",
+			"src": ["group:sre"],
+			"dst": ["tag:database:*",
+					"tag:webserver",
+					"web-server:443",
+					"production-backend:*",
+					"uat1:22"
+				],
+		},
+
+	],
+}

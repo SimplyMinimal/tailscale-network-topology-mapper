@@ -5,9 +5,10 @@ from pyvis.network import Network
 
 from network_graph import NetworkGraph
 from config import VISUALIZATION_CONFIG, NODE_COLORS
+from services import RendererInterface
 
 
-class Renderer:
+class Renderer(RendererInterface):
     """
     Renders network graphs to interactive HTML visualizations using Pyvis.
     
@@ -40,8 +41,8 @@ class Renderer:
         self.output_file = output_file  # Store for legend
         
         logging.debug("Adding nodes to visualization")
-        for node, color, tooltip_text in self.network_graph.nodes:
-            self.net.add_node(node, color=color, title=tooltip_text)
+        for node, color, tooltip_text, shape in self.network_graph.nodes:
+            self.net.add_node(node, color=color, title=tooltip_text, shape=shape)
             logging.debug(f"Added visualization node: {node} (color: {color})")
 
         logging.debug("Adding edges to visualization")

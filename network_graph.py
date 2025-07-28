@@ -1,10 +1,12 @@
 import logging
-from typing import Dict, List, Set, Tuple, Union
+from collections import defaultdict
+from typing import Dict, List, Set, Tuple, Union, DefaultDict
 
 from config import COMPANY_DOMAIN, NODE_COLORS
+from services import NetworkGraphInterface
 
 
-class NetworkGraph:
+class NetworkGraph(NetworkGraphInterface):
     """
     Builds a network graph from Tailscale policy rules (ACLs and grants).
     
@@ -23,14 +25,14 @@ class NetworkGraph:
         """
         self.hosts = hosts
         self.groups = groups
-        self.nodes: Set[Tuple[str, str, str]] = set()  # (node_id, color, tooltip)
+        self.nodes: Set[Tuple[str, str, str, str]] = set()  # (node_id, color, tooltip, shape)
         self.edges: List[Tuple[str, str]] = []  # (source, destination)
         logging.debug(f"NetworkGraph initialized with {len(hosts)} hosts and {len(groups)} groups")
 
-    def add_node(self, node: str, color: str, tooltip_text: str) -> None:
-        """Add a node to the graph with specified color and tooltip."""
-        self.nodes.add((node, color, tooltip_text))
-        logging.debug(f"Added node: {node} (color: {color})")
+    def add_node(self, node: str, color: str, tooltip_text: str, shape: str = "dot") -> None:
+        """Add a node to the graph with specified color, tooltip, and shape."""
+        self.nodes.add((node, color, tooltip_text, shape))
+        logging.debug(f"Added node: {node} (color: {color}, shape: {shape})")
 
     def add_edge(self, src: str, dst: str) -> None:
         """Add a directed edge from source to destination node."""
@@ -39,58 +41,104 @@ class NetworkGraph:
 
     def build_graph(self, acls: List[Dict[str, List[str]]], grants: List[Dict[str, Union[str, List[str]]]] = None) -> None:
         """
-        Build the network graph from ACL rules and grant rules.
-        
+        Build the network graph from ACL rules and grant rules with optimized performance.
+
         Args:
             acls: List of legacy ACL rules with src/dst fields
             grants: List of modern grant rules with extended features (optional)
         """
         if grants is None:
             grants = []
-        
+
         logging.debug(f"Building graph from {len(acls)} ACLs and {len(grants)} grants")
-            
-        # Process legacy ACLs
+
+        # Batch collections for efficient processing
+        all_nodes: Dict[str, Tuple[str, str, str]] = {}  # node_id -> (color, tooltip, shape)
+        all_edges: Set[Tuple[str, str]] = set()  # Deduplicated edges
+
+        # Process legacy ACLs in batch
         logging.debug("Processing legacy ACL rules")
+        acl_edges = self._process_acls_batch(acls, all_nodes)
+        all_edges.update(acl_edges)
+
+        # Process modern grants in batch
+        logging.debug("Processing modern grant rules")
+        grant_edges = self._process_grants_batch(grants, all_nodes)
+        all_edges.update(grant_edges)
+
+        # Batch add all nodes and edges
+        for node_id, (color, tooltip, shape) in all_nodes.items():
+            self.nodes.add((node_id, color, tooltip, shape))
+
+        self.edges.extend(list(all_edges))
+
+        logging.debug(f"Graph building completed: {len(self.nodes)} nodes, {len(self.edges)} edges")
+
+    def _process_acls_batch(self, acls: List[Dict], all_nodes: Dict[str, Tuple[str, str, str]]) -> Set[Tuple[str, str]]:
+        """Process ACL rules in batch for better performance."""
+        edges: Set[Tuple[str, str]] = set()
+
         for i, rule in enumerate(acls):
-            logging.debug(f"Processing ACL rule {i+1}: {rule}")
+            logging.debug(f"Processing ACL rule {i+1}")
+
             src_nodes = self._resolve_nodes(rule["src"])
             dst_nodes = self._resolve_nodes(rule["dst"])
-            logging.debug(f"ACL {i+1} resolved to {len(src_nodes)} source nodes and {len(dst_nodes)} destination nodes")
 
+            # Batch node creation
             for src in src_nodes:
-                src_tooltip = self._get_node_tooltip(src)
-                self.add_node(src, self._get_node_color(src), src_tooltip)
+                if src not in all_nodes:
+                    all_nodes[src] = (
+                        self._get_node_color(src),
+                        self._get_node_tooltip(src),
+                        "dot"
+                    )
 
             for dst in dst_nodes:
-                dst_tooltip = self._get_node_tooltip(dst)
-                self.add_node(dst, self._get_node_color(dst), dst_tooltip)
+                if dst not in all_nodes:
+                    all_nodes[dst] = (
+                        self._get_node_color(dst),
+                        self._get_node_tooltip(dst),
+                        "dot"
+                    )
 
-            for src in src_nodes:
-                for dst in dst_nodes:
-                    self.add_edge(src, dst)
-        
-        # Process modern grants
-        logging.debug("Processing modern grant rules")
+            # Batch edge creation using set comprehension
+            rule_edges = {(src, dst) for src in src_nodes for dst in dst_nodes}
+            edges.update(rule_edges)
+
+        return edges
+
+    def _process_grants_batch(self, grants: List[Dict], all_nodes: Dict[str, Tuple[str, str, str]]) -> Set[Tuple[str, str]]:
+        """Process grant rules in batch for better performance."""
+        edges: Set[Tuple[str, str]] = set()
+
         for i, grant in enumerate(grants):
-            logging.debug(f"Processing grant rule {i+1}: {grant}")
+            logging.debug(f"Processing grant rule {i+1}")
+
             src_nodes = self._resolve_nodes(grant["src"])
             dst_nodes = self._resolve_grant_destinations(grant)
-            logging.debug(f"Grant {i+1} resolved to {len(src_nodes)} source nodes and {len(dst_nodes)} destination nodes")
 
+            # Batch node creation
             for src in src_nodes:
-                src_tooltip = self._get_grant_src_tooltip(src, grant)
-                self.add_node(src, self._get_node_color(src), src_tooltip)
+                if src not in all_nodes:
+                    all_nodes[src] = (
+                        self._get_node_color(src),
+                        self._get_grant_src_tooltip(src, grant),
+                        "triangle"
+                    )
 
             for dst in dst_nodes:
-                dst_tooltip = self._get_grant_dst_tooltip(dst, grant)
-                self.add_node(dst, self._get_node_color(dst), dst_tooltip)
+                if dst not in all_nodes:
+                    all_nodes[dst] = (
+                        self._get_node_color(dst),
+                        self._get_grant_dst_tooltip(dst, grant),
+                        "triangle"
+                    )
 
-            for src in src_nodes:
-                for dst in dst_nodes:
-                    self.add_edge(src, dst)
-        
-        logging.debug("Graph building completed")
+            # Batch edge creation using set comprehension
+            rule_edges = {(src, dst) for src in src_nodes for dst in dst_nodes}
+            edges.update(rule_edges)
+
+        return edges
 
     def _resolve_nodes(self, nodes: List[str]) -> Set[str]:
         logging.debug(f"Resolving nodes: {nodes}")

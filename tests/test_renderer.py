@@ -29,8 +29,8 @@ class TestRenderer:
         # Create a mock network graph with some data
         mock_graph = Mock(spec=NetworkGraph)
         mock_graph.nodes = {
-            ("node1", "#FF0000", "Test tooltip 1"),
-            ("node2", "#00FF00", "Test tooltip 2")
+            ("node1", "#FF0000", "Test tooltip 1", "dot"),
+            ("node2", "#00FF00", "Test tooltip 2", "triangle")
         }
         mock_graph.edges = [("node1", "node2")]
         

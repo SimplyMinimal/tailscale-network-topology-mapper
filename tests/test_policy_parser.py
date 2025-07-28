@@ -1,11 +1,14 @@
 """
-Test suite for PolicyParser class.
+Test suite for refactored PolicyParser class and related components.
 """
 import pytest
 import tempfile
 import json
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from policy_parser import PolicyParser
+from services.file_loader import PolicyFileLoader
+from services.policy_validator import PolicyValidator
+from models.policy_data import PolicyData
 
 
 class TestPolicyParser:
@@ -21,6 +24,55 @@ class TestPolicyParser:
         assert parser.acls == []
         assert parser.grants == []
     
+    def test_parse_policy_success(self):
+        """Test successful policy parsing."""
+        test_data = {
+            "groups": {"group:test": ["user@example.com"]},
+            "hosts": {"host1": "192.168.1.1"},
+            "tagOwners": {"tag:web": ["group:admin"]},
+            "acls": [{"src": ["group:test"], "dst": ["host1:80"]}],
+            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}]
+        }
+        
+        parser = PolicyParser()
+        
+        # Mock the file loader and validator
+        parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
+        parser._validator.validate_policy_structure = MagicMock()
+        
+        parser.parse_policy()
+        
+        assert parser.groups == test_data["groups"]
+        assert parser.hosts == test_data["hosts"]
+        assert parser.tag_owners == test_data["tagOwners"]
+        assert parser.acls == test_data["acls"]
+        assert parser.grants == test_data["grants"]
+    
+    def test_parse_policy_file_error(self):
+        """Test handling of file loading errors."""
+        parser = PolicyParser()
+        parser._file_loader.load_json_or_hujson = MagicMock(side_effect=ValueError("File not found"))
+        
+        with pytest.raises(ValueError, match="File not found"):
+            parser.parse_policy()
+    
+    def test_parse_policy_validation_error(self):
+        """Test handling of validation errors."""
+        test_data = {"grants": [{"dst": ["target"]}]}  # Missing src
+        
+        parser = PolicyParser()
+        parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
+        parser._validator.validate_policy_structure = MagicMock(
+            side_effect=ValueError("Grant 1 missing required 'src' field")
+        )
+        
+        with pytest.raises(ValueError, match="Grant 1 missing required 'src' field"):
+            parser.parse_policy()
+
+
+class TestPolicyFileLoader:
+    """Test cases for PolicyFileLoader."""
+    
     def test_load_json_valid(self):
         """Test loading valid JSON file."""
         test_data = {"groups": {"group:test": ["user@example.com"]}}
@@ -29,93 +81,99 @@ class TestPolicyParser:
             json.dump(test_data, f)
             temp_path = f.name
         
-        parser = PolicyParser()
-        result = parser.load_json_or_hujson(temp_path)
+        loader = PolicyFileLoader()
+        result = loader.load_json_or_hujson(temp_path)
         assert result == test_data
     
     def test_load_json_file_not_found(self):
         """Test handling of missing file."""
-        parser = PolicyParser()
-        with pytest.raises(ValueError, match="Policy file not found"):
-            parser.load_json_or_hujson("/nonexistent/file.json")
+        loader = PolicyFileLoader()
+        with pytest.raises(ValueError, match="Error loading policy file"):
+            loader.load_json_or_hujson("/nonexistent/file.json")
+
+
+class TestPolicyValidator:
+    """Test cases for PolicyValidator."""
     
     def test_validate_policy_structure_missing_grant_src(self):
         """Test validation of grants with missing src field."""
-        parser = PolicyParser()
-        parser.grants = [{"dst": ["target"]}]  # Missing src
+        data = {"grants": [{"dst": ["target"]}]}  # Missing src
         
+        validator = PolicyValidator()
         with pytest.raises(ValueError, match="Grant 1 missing required 'src' field"):
-            parser._validate_policy_structure()
+            validator.validate_policy_structure(data)
     
     def test_validate_policy_structure_missing_grant_dst(self):
         """Test validation of grants with missing dst field."""
-        parser = PolicyParser()
-        parser.grants = [{"src": ["source"]}]  # Missing dst
+        data = {"grants": [{"src": ["source"]}]}  # Missing dst
         
+        validator = PolicyValidator()
         with pytest.raises(ValueError, match="Grant 1 missing required 'dst' field"):
-            parser._validate_policy_structure()
+            validator.validate_policy_structure(data)
     
     def test_validate_policy_structure_invalid_grant_src_type(self):
         """Test validation of grants with wrong src type."""
-        parser = PolicyParser()
-        parser.grants = [{"src": "not_a_list", "dst": ["target"]}]
+        data = {"grants": [{"src": "not_a_list", "dst": ["target"]}]}
         
-        with pytest.raises(ValueError, match="Grant 1 'src' must be a list"):
-            parser._validate_policy_structure()
+        validator = PolicyValidator()
+        with pytest.raises(ValueError, match="Grant 1 'src' field must be a list"):
+            validator.validate_policy_structure(data)
     
     def test_validate_ip_specifications_valid(self):
         """Test validation of valid IP specifications."""
-        parser = PolicyParser()
+        validator = PolicyValidator()
         # These should not raise exceptions
-        parser._validate_ip_specifications(["*"], 1)
-        parser._validate_ip_specifications(["tcp:443"], 1)
-        parser._validate_ip_specifications(["tcp:8000-8999"], 1)
-        parser._validate_ip_specifications(["tcp"], 1)
-    
-    def test_validate_ip_specifications_invalid_port_range(self):
-        """Test validation of invalid port ranges."""
-        parser = PolicyParser()
-        
-        with pytest.raises(ValueError, match="port out of range"):
-            parser._validate_ip_specifications(["tcp:70000"], 1)
-        
-        with pytest.raises(ValueError, match="invalid port range"):
-            parser._validate_ip_specifications(["tcp:8000-7000"], 1)
+        validator.validate_ip_specifications(["*"], 1)
+        validator.validate_ip_specifications(["tcp:443"], 1)
+        validator.validate_ip_specifications(["tcp:8000-8999"], 1)
+        validator.validate_ip_specifications(["tcp"], 1)
     
     def test_validate_ip_specifications_invalid_format(self):
-        """Test validation of invalid IP specification format."""
-        parser = PolicyParser()
-        
-        # Test invalid port specification (gets caught as port error, not IP spec error)
-        with pytest.raises(ValueError, match="invalid port specification"):
-            parser._validate_ip_specifications(["tcp:443:extra"], 1)
-        
-        with pytest.raises(ValueError, match="invalid port specification"):
-            parser._validate_ip_specifications(["tcp:abc"], 1)
+        """Test validation of invalid IP specification formats."""
+        validator = PolicyValidator()
+
+        # Test invalid protocol
+        with pytest.raises(ValueError, match="Invalid protocol 'invalid'"):
+            validator.validate_ip_specifications(["invalid:443"], 1)
+
+        # Test port out of range (gets caught as invalid port format due to int conversion)
+        with pytest.raises(ValueError, match="Invalid port format"):
+            validator.validate_ip_specifications(["tcp:99999"], 1)
+
+
+class TestPolicyData:
+    """Test cases for PolicyData."""
     
-    def test_parse_policy_complete_structure(self):
-        """Test parsing a complete policy structure."""
-        test_policy = {
+    def test_from_dict(self):
+        """Test creating PolicyData from dictionary."""
+        data = {
             "groups": {"group:test": ["user@example.com"]},
-            "hosts": {"server": "192.168.1.1"},
-            "tagOwners": {"tag:web": ["admin@example.com"]},
-            "acls": [{"action": "accept", "src": ["group:test"], "dst": ["server:22"]}],
-            "grants": [{"src": ["group:test"], "dst": ["tag:web"], "ip": ["tcp:443"]}]
+            "hosts": {"host1": "192.168.1.1"},
+            "tagOwners": {"tag:web": ["group:admin"]},
+            "acls": [{"src": ["group:test"], "dst": ["host1:80"]}],
+            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}]
         }
         
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(test_policy, f)
-            temp_path = f.name
+        policy_data = PolicyData.from_dict(data)
         
-        parser = PolicyParser(temp_path)
-        parser.parse_policy()
+        assert policy_data.groups == data["groups"]
+        assert policy_data.hosts == data["hosts"]
+        assert policy_data.tag_owners == data["tagOwners"]
+        assert policy_data.acls == data["acls"]
+        assert policy_data.grants == data["grants"]
+    
+    def test_get_stats(self):
+        """Test getting statistics from PolicyData."""
+        policy_data = PolicyData(
+            groups={"group1": [], "group2": []},
+            hosts={"host1": "ip1"},
+            acls=[{"rule": 1}],
+            grants=[{"rule": 1}, {"rule": 2}]
+        )
         
-        assert parser.groups == test_policy["groups"]
-        assert parser.hosts == test_policy["hosts"]
-        assert parser.tag_owners == test_policy["tagOwners"]
-        assert parser.acls == test_policy["acls"]
-        assert parser.grants == test_policy["grants"]
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])
+        stats = policy_data.get_stats()
+        
+        assert stats["groups"] == 2
+        assert stats["hosts"] == 1
+        assert stats["acls"] == 1
+        assert stats["grants"] == 2

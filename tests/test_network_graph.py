@@ -25,7 +25,7 @@ class TestNetworkGraph:
         graph.add_node("test_node", "#FF0000", "Test tooltip")
         
         assert len(graph.nodes) == 1
-        assert ("test_node", "#FF0000", "Test tooltip") in graph.nodes
+        assert ("test_node", "#FF0000", "Test tooltip", "dot") in graph.nodes
     
     def test_add_edge(self):
         """Test adding edges to the graph."""
@@ -97,11 +97,10 @@ class TestNetworkGraph:
             "dst": ["server"],
             "ip": ["tcp:443", "udp:53"]
         }
-        
+
         destinations = graph._resolve_grant_destinations(grant)
-        assert len(destinations) == 2
-        assert "server:tcp:443" in destinations
-        assert "server:udp:53" in destinations
+        assert len(destinations) == 1  # Now groups protocols into single destination
+        assert "server [tcp:443, udp:53]" in destinations
     
     def test_resolve_grant_destinations_without_ip_protocols(self):
         """Test grant destination resolution without IP protocols."""
@@ -182,8 +181,8 @@ class TestNetworkGraph:
         assert len(graph.nodes) == 2
         assert len(graph.edges) == 1
         
-        # Check that enhanced destination node exists
-        assert ("group:admin", "server:tcp:443") in graph.edges
+        # Check that enhanced destination node exists (grouped protocols)
+        assert ("group:admin", "server [tcp:443]") in graph.edges
 
 
 if __name__ == "__main__":

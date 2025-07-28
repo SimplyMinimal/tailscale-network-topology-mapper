@@ -19,7 +19,11 @@
 		"group:sales": ["sales1@company.com", "sales2@company.com"],
 		"group:nyc": ["nyc-user@company.com"],
 		"group:contractors": ["contractor@external.com"],
-		"group:mobile": ["mobile@company.com"]
+		"group:mobile": ["mobile@company.com"],
+
+		// grants groups
+		"group:dev": ["alice@example.com", "bob@example.com"],
+    	"group:devops": ["carl@example.com"]
 	},
 
 	// Combined host mappings
@@ -279,6 +283,18 @@
 			"srcPosture": ["posture:complianceDevice"],
 			"app": ["deployment-pipeline"],
 			"ip": ["tcp:443", "tcp:8443"]
+		},
+
+		// https://tailscale.com/kb/1458/grant-examples#cicd-development-pipeline
+		{
+			"src": ["group:dev"],
+			"dst": ["tag:dev"],
+			"ip": ["*"]
+		},
+		{
+			"src": ["group:devops"],
+			"dst": ["tag:ci", "tag:prod"],
+			"ip": ["*"]
 		}
 	]
 }

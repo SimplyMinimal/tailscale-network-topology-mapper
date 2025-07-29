@@ -61,10 +61,66 @@ class Renderer(RendererInterface):
         logging.debug("Adding enhanced search functionality")
         self._add_enhanced_search()
 
+        logging.debug("Improving zoom navigation experience")
+        self._improve_zoom_controls()
+
         logging.debug("Adding legend to HTML file")
         self._add_legend()
 
         logging.debug("HTML rendering completed")
+
+    def _improve_zoom_controls(self) -> None:
+        """
+        Improve zoom navigation experience by adding smoother zoom controls.
+
+        Modifies the generated HTML to include better zoom configuration with
+        smaller incremental steps for more precise navigation.
+        """
+        logging.debug("Improving zoom controls in HTML file")
+
+        # Check if output file exists (might not exist in tests)
+        import os
+        if not os.path.exists(self.output_file):
+            logging.debug(f"Output file {self.output_file} does not exist, skipping zoom improvement")
+            return
+
+        with open(self.output_file, "r") as f:
+            content = f.read()
+
+        # Find the interaction section in the options and add zoom configuration
+        old_interaction = '''    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    }'''
+
+        new_interaction = '''    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false,
+        "zoomSpeed": 0.5,
+        "zoomView": true
+    }'''
+
+        if old_interaction in content:
+            content = content.replace(old_interaction, new_interaction)
+            logging.debug("Found and replaced interaction section")
+        else:
+            logging.warning("Could not find interaction section to replace")
+            logging.debug(f"Looking for: {repr(old_interaction)}")
+
+        with open(self.output_file, "w") as f:
+            f.write(content)
+
+        # Verify the change was written
+        with open(self.output_file, "r") as f:
+            verify_content = f.read()
+            if "zoomSpeed" in verify_content:
+                logging.debug("Zoom settings successfully written to file")
+            else:
+                logging.warning("Zoom settings not found in written file")
+
+        logging.debug("Zoom controls improved successfully")
 
     def _add_enhanced_search(self) -> None:
         """

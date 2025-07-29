@@ -1,60 +1,644 @@
-name: Sync Tailscale ACLs
+name: Sync Tailscale ACL & Generate Network Topology
+
+# Workflow for managing Tailscale ACLs and generating network topology visualizations
+# Supports both ACL validation/deployment and automated network map generation with proper security controls
 
 on:
   push:
     branches: ["main"]
+    paths:
+      - "policy.hujson"
+      - "*.py"
+      - "requirements.txt"
+      - ".github/workflows/tailscale.yml"
   pull_request:
     branches: ["main"]
+    paths:
+      - "policy.hujson"
+      - "*.py"
+      - "requirements.txt"
+      - ".github/workflows/tailscale.yml"
+  workflow_dispatch:
+    inputs:
+      force_regenerate:
+        description: "Force regenerate network topology even if no changes detected"
+        required: false
+        default: false
+        type: boolean
+      skip_acl_operations:
+        description: "Skip ACL operations (useful for topology-only updates)"
+        required: false
+        default: false
+        type: boolean
 
+# Global security settings
 permissions:
-  # Give the default GITHUB_TOKEN write permission to commit and push the changed files back to the repository.
-  contents: write
+  contents: read  # Default to read-only, escalate per job as needed
+
+# Prevent concurrent runs that could conflict with each other
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.13"
+  CACHE_VERSION: "v1"  # Increment to invalidate caches
 
 jobs:
-  acls:
+  # Validate environment and dependencies before proceeding
+  validate-environment:
+    name: "Validate Environment and Dependencies"
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      python-cache-key: ${{ steps.cache-keys.outputs.python-cache-key }}
+      requirements-hash: ${{ steps.cache-keys.outputs.requirements-hash }}
+      should-run-acl: ${{ steps.changes.outputs.should-run-acl }}
+      should-run-topology: ${{ steps.changes.outputs.should-run-topology }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: "Checkout repository"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
-          ref: ${{ github.head_ref }}
+          fetch-depth: 2  # Need previous commit for change detection
 
-      - name: Deploy ACL
-        if: github.event_name == 'push'
-        id: deploy-acl
-        uses: tailscale/gitops-acl-action@v1
-        with:
-          api-key: ${{ secrets.TS_API_KEY }}
-          tailnet: ${{ secrets.TS_TAILNET }}
-          action: apply
+      - name: "Validate required secrets"
+        run: |
+          if [[ "${{ github.event_name }}" == "push" || "${{ github.event_name }}" == "pull_request" ]]; then
+            if [[ -z "${{ secrets.TS_API_KEY }}" ]]; then
+              echo "ERROR: TS_API_KEY secret is required but not set"
+              exit 1
+            fi
+            if [[ -z "${{ secrets.TS_TAILNET }}" ]]; then
+              echo "ERROR: TS_TAILNET secret is required but not set"
+              exit 1
+            fi
+            echo "SUCCESS: Required secrets are configured"
+          fi
 
-      - name: Test ACL
-        if: github.event_name == 'pull_request'
-        id: test-acl
-        uses: tailscale/gitops-acl-action@v1
+      - name: "Detect changes and determine job execution"
+        id: changes
+        run: |
+          # Determine what should run based on changes and inputs
+          should_run_acl="false"
+          should_run_topology="false"
+
+          if [[ "${{ github.event.inputs.skip_acl_operations }}" == "true" ]]; then
+            echo "INFO: Skipping ACL operations per user input"
+          elif [[ "${{ github.event_name }}" == "push" || "${{ github.event_name }}" == "pull_request" ]]; then
+            if git diff --name-only HEAD~1 HEAD | grep -E "(policy\.hujson|\.github/workflows/tailscale\.yml)" > /dev/null; then
+              should_run_acl="true"
+              echo "INFO: ACL-related files changed, will run ACL operations"
+            fi
+          fi
+
+          if [[ "${{ github.event.inputs.force_regenerate }}" == "true" ]]; then
+            should_run_topology="true"
+            echo "INFO: Force regenerate requested, will run topology generation"
+          elif [[ "${{ github.event_name }}" == "push" ]] || [[ "$should_run_acl" == "true" ]]; then
+            if git diff --name-only HEAD~1 HEAD | grep -E "(policy\.hujson|.*\.py|requirements\.txt)" > /dev/null; then
+              should_run_topology="true"
+              echo "INFO: Topology-related files changed, will run topology generation"
+            fi
+          fi
+
+          echo "should-run-acl=$should_run_acl" >> $GITHUB_OUTPUT
+          echo "should-run-topology=$should_run_topology" >> $GITHUB_OUTPUT
+
+      - name: "Generate cache keys"
+        id: cache-keys
+        run: |
+          requirements_hash=$(sha256sum requirements.txt | cut -d' ' -f1)
+          python_cache_key="${{ env.CACHE_VERSION }}-python-${{ env.PYTHON_VERSION }}-$requirements_hash"
+
+          echo "python-cache-key=$python_cache_key" >> $GITHUB_OUTPUT
+          echo "requirements-hash=$requirements_hash" >> $GITHUB_OUTPUT
+          echo "INFO: Cache key: $python_cache_key"
+
+  # Run tests before any operations
+  test-suite:
+    name: "Run Test Suite"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: validate-environment
+    if: needs.validate-environment.outputs.should-run-acl == 'true' || needs.validate-environment.outputs.should-run-topology == 'true'
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: "Set up Python ${{ env.PYTHON_VERSION }}"
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
         with:
-          api-key: ${{ secrets.TS_API_KEY }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'requirements.txt'
+
+      - name: "Install dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov  # Add testing dependencies
+
+      - name: "Run tests with coverage"
+        run: |
+          cd tests
+          python -m pytest --cov=../ --cov-report=term-missing --cov-report=xml
+
+      - name: "Upload coverage reports"
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "INFO: Test coverage completed"
+          # Could integrate with coverage services here
+
+  # ACL Management Job - Handles Tailscale ACL operations
+  acl-management:
+    name: "Tailscale ACL Management"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [validate-environment, test-suite]
+    if: needs.validate-environment.outputs.should-run-acl == 'true'
+
+    permissions:
+      contents: read
+      id-token: write  # For potential OIDC authentication
+
+    environment:
+      name: ${{ github.event_name == 'push' && 'production' || 'staging' }}
+
+    outputs:
+      acl-operation-status: ${{ steps.acl-result.outputs.status }}
+      acl-operation-details: ${{ steps.acl-result.outputs.details }}
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+
+      - name: "Pre-validate ACL policy"
+        id: pre-validate-acl
+        uses: tailscale/gitops-acl-action@v1.3.1
+        with:
+          # Use OAuth client authentication if available, fallback to API key
+          api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tailnet: ${{ secrets.TS_TAILNET }}
           action: test
+          policy-file: policy.hujson
 
-      # Rebuild HTML
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
+      # OAuth client authentication provides better security than API keys:
+      # - More granular permissions and scoping
+      # - Automatic token rotation and expiration
+      # - Better audit trails and access control
+      # - Reduced risk of credential exposure
+      # To migrate: Create OAuth client in Tailscale admin console and set TS_OAUTH_CLIENT_ID and TS_OAUTH_SECRET
+
+      - name: "Deploy ACL to Production"
+        if: github.event_name == 'push' && steps.pre-validate-acl.outcome == 'success'
+        id: deploy-acl
+        uses: tailscale/gitops-acl-action@v1.3.1
         with:
-          python-version: "3.13"
-          cache: "pip" # caching pip dependencies
+          # Use OAuth client authentication if available, fallback to API key
+          api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tailnet: ${{ secrets.TS_TAILNET }}
+          action: apply
+          policy-file: policy.hujson
+        continue-on-error: true
 
-      - name: Install dependencies
+      - name: "Test ACL Changes"
+        if: github.event_name == 'pull_request' && steps.pre-validate-acl.outcome == 'success'
+        id: test-acl
+        uses: tailscale/gitops-acl-action@v1.3.1
+        with:
+          # Use OAuth client authentication if available, fallback to API key
+          api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tailnet: ${{ secrets.TS_TAILNET }}
+          action: test
+          policy-file: policy.hujson
+        continue-on-error: true
+
+      - name: "Process ACL operation results"
+        id: acl-result
+        if: always() && steps.pre-validate-acl.outcome != 'skipped'
+        run: |
+          # Check pre-validation results first
+          PRE_VALIDATION_OUTCOME="${{ steps.pre-validate-acl.outcome }}"
+
+          # Determine which operation was intended
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            OPERATION="deployment"
+            STEP_OUTCOME="${{ steps.deploy-acl.outcome }}"
+            STEP_OUTPUTS="${{ toJson(steps.deploy-acl.outputs) }}"
+          else
+            OPERATION="testing"
+            STEP_OUTCOME="${{ steps.test-acl.outcome }}"
+            STEP_OUTPUTS="${{ toJson(steps.test-acl.outputs) }}"
+          fi
+
+          # Determine overall status
+          # If pre-validation failed, the main operation would have been skipped
+          if [[ "${PRE_VALIDATION_OUTCOME}" == "failure" ]]; then
+            OVERALL_STATUS="failure"
+            PRIMARY_FAILURE="pre-validation"
+            MAIN_OPERATION_STATUS="skipped"
+          elif [[ "${PRE_VALIDATION_OUTCOME}" == "success" ]]; then
+            if [[ "${STEP_OUTCOME}" == "failure" ]]; then
+              OVERALL_STATUS="failure"
+              PRIMARY_FAILURE="${OPERATION}"
+              MAIN_OPERATION_STATUS="failed"
+            elif [[ "${STEP_OUTCOME}" == "success" ]]; then
+              OVERALL_STATUS="success"
+              PRIMARY_FAILURE=""
+              MAIN_OPERATION_STATUS="success"
+            else
+              # This shouldn't happen if pre-validation succeeded
+              OVERALL_STATUS="failure"
+              PRIMARY_FAILURE="unknown"
+              MAIN_OPERATION_STATUS="unknown"
+            fi
+          else
+            # Pre-validation had an unexpected outcome
+            OVERALL_STATUS="failure"
+            PRIMARY_FAILURE="pre-validation"
+            MAIN_OPERATION_STATUS="skipped"
+          fi
+
+          echo "ACL_OPERATION=${OPERATION}" >> $GITHUB_ENV
+          echo "ACL_OUTCOME=${STEP_OUTCOME}" >> $GITHUB_ENV
+          echo "PRE_VALIDATION_OUTCOME=${PRE_VALIDATION_OUTCOME}" >> $GITHUB_ENV
+          echo "MAIN_OPERATION_STATUS=${MAIN_OPERATION_STATUS}" >> $GITHUB_ENV
+          echo "status=${OVERALL_STATUS}" >> $GITHUB_OUTPUT
+          echo "operation=${OPERATION}" >> $GITHUB_OUTPUT
+          echo "primary_failure=${PRIMARY_FAILURE}" >> $GITHUB_OUTPUT
+
+          # Create detailed GitHub job summary
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🔒 Tailscale ACL Operation Results
+
+          **Intended Operation**: ${OPERATION^}
+          **Pre-validation**: $(if [[ "${PRE_VALIDATION_OUTCOME}" == "success" ]]; then echo "✅ Passed"; elif [[ "${PRE_VALIDATION_OUTCOME}" == "failure" ]]; then echo "❌ Failed"; else echo "⚠️ Unknown"; fi)
+          **Main Operation**: $(if [[ "${MAIN_OPERATION_STATUS}" == "success" ]]; then echo "✅ Success"; elif [[ "${MAIN_OPERATION_STATUS}" == "failed" ]]; then echo "❌ Failed"; elif [[ "${MAIN_OPERATION_STATUS}" == "skipped" ]]; then echo "⏭️ Skipped (due to pre-validation failure)"; else echo "⚠️ Unknown"; fi)
+          **Overall Status**: $(if [[ "${OVERALL_STATUS}" == "success" ]]; then echo "✅ Success"; else echo "❌ Failed"; fi)
+          **Policy File**: \`policy.hujson\`
+          **Tailnet**: \`${{ secrets.TS_TAILNET }}\`
+          **Authentication**: $(if [[ -n "${{ secrets.TS_OAUTH_CLIENT_ID }}" ]]; then echo "OAuth Client (Recommended)"; else echo "API Key (Legacy)"; fi)
+
+          EOF
+
+          if [[ "${OVERALL_STATUS}" == "success" ]]; then
+            cat >> $GITHUB_STEP_SUMMARY << EOF
+          ### ✅ Operation Completed Successfully
+
+          The ACL policy has been successfully $(if [[ "${OPERATION}" == "deployment" ]]; then echo "deployed to production"; else echo "validated"; fi).
+
+          **Validation Steps Completed:**
+          - ✅ Pre-validation using Tailscale's official validation (acts as security gate)
+          - ✅ $(if [[ "${OPERATION}" == "deployment" ]]; then echo "Production deployment"; else echo "Policy testing"; fi)
+
+          EOF
+
+            if [[ "${OPERATION}" == "testing" ]]; then
+              cat >> $GITHUB_STEP_SUMMARY << EOF
+          **Next Steps**:
+          - Review the test results above
+          - If everything looks correct, merge this PR to deploy to production
+          - Monitor your Tailscale admin console for any connectivity issues
+
+          EOF
+            fi
+            echo "SUCCESS: ACL ${OPERATION} completed successfully"
+          else
+            cat >> $GITHUB_STEP_SUMMARY << EOF
+          ### ❌ Operation Failed
+
+          $(if [[ "${PRIMARY_FAILURE}" == "pre-validation" ]]; then echo "**🚫 Pre-validation Gate Activated**: The ACL policy failed Tailscale's official validation and was prevented from proceeding to ${OPERATION}."; else echo "The ACL ${OPERATION} encountered errors after passing pre-validation."; fi)
+
+          **Failure Details:**
+          $(if [[ "${PRIMARY_FAILURE}" == "pre-validation" ]]; then echo "- ❌ **Pre-validation**: Failed - Policy contains validation errors"; else echo "- ✅ **Pre-validation**: Passed"; fi)
+          $(if [[ "${MAIN_OPERATION_STATUS}" == "skipped" ]]; then echo "- ⏭️ **${OPERATION^}**: Skipped (prevented by pre-validation gate)"; elif [[ "${MAIN_OPERATION_STATUS}" == "failed" ]]; then echo "- ❌ **${OPERATION^}**: Failed"; elif [[ "${MAIN_OPERATION_STATUS}" == "success" ]]; then echo "- ✅ **${OPERATION^}**: Passed"; else echo "- ⚠️ **${OPERATION^}**: Unknown status"; fi)
+
+          $(if [[ "${PRIMARY_FAILURE}" == "pre-validation" ]]; then echo "**🛡️ Security Gate Protection**: This failure prevented an invalid policy from being deployed to your Tailscale network, protecting your infrastructure from potential connectivity issues or security vulnerabilities."; fi)
+
+          **Common ACL Validation Issues:**
+          - **Syntax Errors**: Check for missing commas, brackets, or quotes in your policy.hujson
+          - **Invalid References**: Ensure all tags, groups, and hosts referenced in rules are properly defined
+          - **Permission Issues**: Verify that the authentication credentials have sufficient permissions
+          - **Network Connectivity**: Check if the GitHub runner can reach Tailscale's API endpoints
+          - **Policy Logic Errors**: Review ACL rules for logical conflicts or overly permissive access
+
+          **Troubleshooting Steps:**
+          1. 🔍 **Review the error logs** in the $(if [[ "${PRIMARY_FAILURE}" == "pre-validation" ]]; then echo "pre-validation"; else echo "failed"; fi) step output above
+          2. 🧪 **Test locally** using \`tailscale configure acl test policy.hujson\` to get the same validation
+          3. 📖 **Check documentation** at https://tailscale.com/kb/1018/acls/
+          4. 🔑 **Verify credentials** in your repository secrets (if authentication failed)
+          5. 🏷️ **Validate references** ensure all tags/groups exist before use
+          6. 🔄 **Use official validation** - The pre-validation gate uses Tailscale's authoritative validation rules
+
+          **Security Recommendation:**
+          $(if [[ -z "${{ secrets.TS_OAUTH_CLIENT_ID }}" ]]; then echo "Consider migrating from API keys to OAuth client authentication for better security. See: https://tailscale.com/kb/1215/oauth-clients/"; else echo "✅ Using OAuth client authentication (recommended)"; fi)
+
+          EOF
+
+            echo "::error::ACL operation failed - ${PRIMARY_FAILURE} step failed"
+            echo "ERROR: ACL operation failed"
+          fi
+
+      - name: "Handle ACL operation failure"
+        if: steps.acl-result.outputs.status == 'failure'
+        run: |
+          if [[ "${{ steps.acl-result.outputs.primary_failure }}" == "pre-validation" ]]; then
+            echo "::error::🚫 Pre-validation gate activated: ACL policy failed Tailscale's official validation"
+            echo "::notice::🛡️ Security protection: Invalid policy was prevented from deployment"
+            echo "::notice::Fix the policy validation errors shown above before proceeding"
+          else
+            echo "::error::ACL ${{ steps.acl-result.outputs.operation }} failed after passing pre-validation"
+            echo "::notice::Pre-validation gate passed but ${{ steps.acl-result.outputs.operation }} step encountered issues"
+          fi
+          echo "::notice::📋 Check the job summary above for detailed troubleshooting guidance"
+          exit 1
+
+  # Network Topology Generation Job - Creates visualization maps
+  network-topology:
+    name: "Generate Network Topology"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [validate-environment, test-suite]
+    if: always() && needs.validate-environment.outputs.should-run-topology == 'true' && needs.test-suite.result == 'success'
+
+    permissions:
+      contents: write  # Required for committing generated files
+
+    outputs:
+      topology-generation-status: ${{ steps.generate-topology.outputs.status }}
+      topology-file-generated: ${{ steps.validate-output.outputs.file-exists }}
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Set up Python with caching"
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'requirements.txt'
+
+      - name: "Install dependencies with caching"
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Python script to generate network map
-        run: python main.py
+      - name: "Validate input files"
+        run: |
+          if [[ ! -f "policy.hujson" ]]; then
+            echo "ERROR: policy.hujson file not found"
+            exit 1
+          fi
 
-      # This will place the newly generated network map HTML file back into the repo
-      - name: Update network map in repo
-        uses: stefanzweifel/git-auto-commit-action@v5
+          if [[ ! -f "main.py" ]]; then
+            echo "ERROR: main.py file not found"
+            exit 1
+          fi
+
+          echo "SUCCESS: Input file validation passed"
+
+      - name: "Generate network topology map"
+        id: generate-topology
+        run: |
+          echo "INFO: Starting network topology generation..."
+
+          # Run with error handling
+          if python main.py; then
+            echo "SUCCESS: Network topology generation completed successfully"
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "ERROR: Network topology generation failed"
+            echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+        continue-on-error: false
+
+      - name: "Validate generated files"
+        id: validate-output
+        run: |
+          if [[ ! -f "network_topology.html" ]]; then
+            echo "ERROR: Expected output file network_topology.html was not generated"
+            echo "file-exists=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Basic HTML validation
+          if ! grep -q "<html" network_topology.html; then
+            echo "ERROR: Generated file does not appear to be valid HTML"
+            echo "file-exists=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          file_size=$(stat -c%s network_topology.html)
+          if [[ $file_size -lt 1000 ]]; then
+            echo "ERROR: Generated file is suspiciously small ($file_size bytes)"
+            echo "file-exists=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "SUCCESS: Generated file validation passed (size: $file_size bytes)"
+          echo "file-exists=true" >> $GITHUB_OUTPUT
+
+      - name: "Create topology generation summary"
+        run: |
+          echo "## Network Topology Generation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: SUCCESS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Generated File**: network_topology.html" >> $GITHUB_STEP_SUMMARY
+          echo "- **File Size**: $(stat -c%s network_topology.html) bytes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Generation Time**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: "Upload topology artifact"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          commit_message: Auto updating network_topology.html
-      # Be aware of limitations here: https://github.com/stefanzweifel/git-auto-commit-action?tab=readme-ov-file#limitations--gotchas
+          name: network-topology-${{ github.sha }}
+          path: network_topology.html
+          retention-days: 7
+
+  # Conditional Commit Job - Only commits if ACL operations succeeded
+  commit-topology:
+    name: "Commit Network Topology"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [validate-environment, acl-management, network-topology]
+    if: |
+      always() &&
+      needs.network-topology.result == 'success' &&
+      needs.network-topology.outputs.topology-file-generated == 'true' &&
+      github.event_name == 'push' &&
+      (
+        (needs.validate-environment.outputs.should-run-acl == 'false') ||
+        (needs.acl-management.result == 'success' && needs.acl-management.outputs.acl-operation-status == 'success')
+      )
+
+    permissions:
+      contents: write  # Required for committing files
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Download topology artifact"
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+        with:
+          name: network-topology-${{ github.sha }}
+          path: .
+
+      - name: "Verify downloaded file"
+        run: |
+          echo "INFO: Preparing to commit network topology file"
+          echo "ACL Management Status: ${{ needs.acl-management.outputs.acl-operation-status }}"
+          echo "Topology Generation Status: ${{ needs.network-topology.outputs.topology-generation-status }}"
+
+          if [[ ! -f "network_topology.html" ]]; then
+            echo "ERROR: network_topology.html not found after artifact download"
+            exit 1
+          fi
+
+          echo "SUCCESS: network_topology.html found and ready for commit"
+
+      - name: "Commit updated network topology"
+        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0  # v6.0.1
+        with:
+          commit_message: |
+            Auto-update network topology visualization
+
+            - Generated from commit: ${{ github.sha }}
+            - Workflow run: ${{ github.run_id }}
+            - Generated at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          file_pattern: "network_topology.html"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"
+          commit_author: "GitHub Actions <github-actions[bot]@users.noreply.github.com>"
+          skip_dirty_check: false
+          disable_globbing: false
+
+  # Notification and Summary Job - Provides workflow results
+  workflow-summary:
+    name: "Workflow Summary & Notifications"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [validate-environment, test-suite, acl-management, network-topology, commit-topology]
+    if: always()
+
+    steps:
+      - name: "Generate workflow summary"
+        run: |
+          echo "# Tailscale Workflow Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow**: ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID**: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Environment validation
+          if [[ "${{ needs.validate-environment.result }}" == "success" ]]; then
+            echo "- SUCCESS **Environment Validation**: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ERROR **Environment Validation**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Test suite
+          if [[ "${{ needs.test-suite.result }}" == "success" ]]; then
+            echo "- SUCCESS **Test Suite**: All tests passed" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.test-suite.result }}" == "skipped" ]]; then
+            echo "- SKIPPED **Test Suite**: Skipped (no changes detected)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ERROR **Test Suite**: Tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # ACL management
+          if [[ "${{ needs.acl-management.result }}" == "success" ]]; then
+            echo "- SUCCESS **ACL Management**: ${{ needs.acl-management.outputs.acl-operation-details }}" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.acl-management.result }}" == "skipped" ]]; then
+            echo "- SKIPPED **ACL Management**: Skipped (no ACL changes detected)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ERROR **ACL Management**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Network topology
+          if [[ "${{ needs.network-topology.result }}" == "success" ]]; then
+            echo "- SUCCESS **Network Topology**: Generated successfully" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.network-topology.result }}" == "skipped" ]]; then
+            echo "- SKIPPED **Network Topology**: Skipped (no changes detected)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ERROR **Network Topology**: Generation failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Commit topology
+          if [[ "${{ needs.commit-topology.result }}" == "success" ]]; then
+            echo "- SUCCESS **Commit Topology**: File committed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.commit-topology.result }}" == "skipped" ]]; then
+            echo "- SKIPPED **Commit Topology**: Skipped (ACL operation failed or not push event)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ERROR **Commit Topology**: Commit failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Useful Links" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Network Topology](./network_topology.html)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Commit Details](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
+
+      - name: "Handle workflow failures"
+        if: contains(needs.*.result, 'failure')
+        run: |
+          echo "::error::One or more workflow jobs failed"
+          echo "::notice::Check the job logs above for detailed error information"
+
+          # Create failure summary
+          echo "## Workflow Failure Details" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.validate-environment.result }}" == "failure" ]]; then
+            echo "- **Environment Validation**: Failed - Check secrets and repository configuration" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.test-suite.result }}" == "failure" ]]; then
+            echo "- **Test Suite**: Failed - Review test failures and fix code issues" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.acl-management.result }}" == "failure" ]]; then
+            echo "- **ACL Management**: Failed - Check ACL syntax and Tailscale API connectivity" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.network-topology.result }}" == "failure" ]]; then
+            echo "- **Network Topology**: Failed - Check Python dependencies and script execution" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.commit-topology.result }}" == "failure" ]]; then
+            echo "- **Commit Topology**: Failed - Check repository permissions and file generation" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          exit 1
+
+      - name: "Workflow completion notification"
+        if: success()
+        run: |
+          echo "SUCCESS: Workflow completed successfully!"
+          echo "All jobs executed as expected and completed without errors."

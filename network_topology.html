@@ -240,12 +240,6 @@ function highlightFilter(filter) {
              
 
              
-             #config {
-                 float: left;
-                 width: 400px;
-                 height: 600px;
-             }
-             
 
              
         </style>
@@ -267,49 +261,109 @@ function highlightFilter(filter) {
                             >
                                 <option selected>Select a Node by ID</option>
                                 
-                                    <option value="group:all staff:*">group:all staff:*</option>
-                                
-                                    <option value="tag:domain-controller">tag:domain-controller</option>
-                                
-                                    <option value="tag:prod:*">tag:prod:*</option>
-                                
-                                    <option value="autogroup:self:*">autogroup:self:*</option>
-                                
-                                    <option value="uat1:22">uat1:22</option>
-                                
                                     <option value="group:dba">group:dba</option>
-                                
-                                    <option value="production-backend:*">production-backend:*</option>
                                 
                                     <option value="web-server:443">web-server:443</option>
                                 
-                                    <option value="group:all staff">group:all staff</option>
-                                
-                                    <option value="tag:ci">tag:ci</option>
-                                
-                                    <option value="tag:database">tag:database</option>
-                                
-                                    <option value="tag:database:*">tag:database:*</option>
-                                
-                                    <option value="group:system_admin">group:system_admin</option>
-                                
-                                    <option value="autogroup:member">autogroup:member</option>
-                                
-                                    <option value="tag:database:5432">tag:database:5432</option>
-                                
-                                    <option value="tag:prod">tag:prod</option>
-                                
-                                    <option value="*:*">*:*</option>
-                                
-                                    <option value="tag:security">tag:security</option>
+                                    <option value="autogroup:internet">autogroup:internet</option>
                                 
                                     <option value="group:dev team">group:dev team</option>
                                 
+                                    <option value="tag:staging">tag:staging</option>
+                                
+                                    <option value="tag:backend [tcp:8080,443]">tag:backend [tcp:8080,443]</option>
+                                
+                                    <option value="group:devops">group:devops</option>
+                                
+                                    <option value="tag:staging [tcp:22,80]">tag:staging [tcp:22,80]</option>
+                                
+                                    <option value="*:*">*:*</option>
+                                
+                                    <option value="tag:production">tag:production</option>
+                                
+                                    <option value="tag:backend [tcp:15000-15010,9080]">tag:backend [tcp:15000-15010,9080]</option>
+                                
+                                    <option value="tag:webserver">tag:webserver</option>
+                                
+                                    <option value="database [tcp:5432,3306]">database [tcp:5432,3306]</option>
+                                
+                                    <option value="tag:production [tcp:443,8443]">tag:production [tcp:443,8443]</option>
+                                
+                                    <option value="tag:security">tag:security</option>
+                                
+                                    <option value="tag:database">tag:database</option>
+                                
+                                    <option value="group:sales">group:sales</option>
+                                
                                     <option value="tag:domain-controller:*">tag:domain-controller:*</option>
+                                
+                                    <option value="autogroup:self">autogroup:self</option>
+                                
+                                    <option value="group:all staff:*">group:all staff:*</option>
+                                
+                                    <option value="tag:backend">tag:backend</option>
+                                
+                                    <option value="tag:ci">tag:ci</option>
+                                
+                                    <option value="group:dev">group:dev</option>
+                                
+                                    <option value="tag:domain-controller">tag:domain-controller</option>
                                 
                                     <option value="group:sre">group:sre</option>
                                 
-                                    <option value="tag:webserver">tag:webserver</option>
+                                    <option value="uat1:22">uat1:22</option>
+                                
+                                    <option value="group:contractors">group:contractors</option>
+                                
+                                    <option value="autogroup:member">autogroup:member</option>
+                                
+                                    <option value="tag:prod:*">tag:prod:*</option>
+                                
+                                    <option value="tag:frontend [udp:161, tcp:9100,8080]">tag:frontend [udp:161, tcp:9100,8080]</option>
+                                
+                                    <option value="tag:logging [tcp:514, udp:514]">tag:logging [tcp:514, udp:514]</option>
+                                
+                                    <option value="production-backend:*">production-backend:*</option>
+                                
+                                    <option value="group:mobile">group:mobile</option>
+                                
+                                    <option value="group:all staff">group:all staff</option>
+                                
+                                    <option value="tag:logging">tag:logging</option>
+                                
+                                    <option value="tag:database:*">tag:database:*</option>
+                                
+                                    <option value="tag:internal-tools [tcp:443,22]">tag:internal-tools [tcp:443,22]</option>
+                                
+                                    <option value="tag:backend [udp:161, tcp:9100,8080]">tag:backend [udp:161, tcp:9100,8080]</option>
+                                
+                                    <option value="* [tcp:22]">* [tcp:22]</option>
+                                
+                                    <option value="tag:backend [tcp:8080,9090]">tag:backend [tcp:8080,9090]</option>
+                                
+                                    <option value="*">*</option>
+                                
+                                    <option value="group:eng">group:eng</option>
+                                
+                                    <option value="group:system_admin">group:system_admin</option>
+                                
+                                    <option value="tag:database:5432">tag:database:5432</option>
+                                
+                                    <option value="autogroup:self:*">autogroup:self:*</option>
+                                
+                                    <option value="tag:prod">tag:prod</option>
+                                
+                                    <option value="tag:internal-tools">tag:internal-tools</option>
+                                
+                                    <option value="tag:production [tcp:443]">tag:production [tcp:443]</option>
+                                
+                                    <option value="tag:dev">tag:dev</option>
+                                
+                                    <option value="group:admin">group:admin</option>
+                                
+                                    <option value="group:nyc">group:nyc</option>
+                                
+                                    <option value="tag:frontend">tag:frontend</option>
                                 
                             </select>
                         </div>
@@ -320,54 +374,10 @@ function highlightFilter(filter) {
                 </div>
             
             
-              <div id="filter-menu" class="card-header">
-                <div class="row no-gutters">
-                  <div class="col-3 pb-2">
-                    <select
-                            class="form-select"
-                            aria-label="Default select example"
-                            onchange="updateFilter(value, 'item')"
-                            id="select-item"
-                        >
-                        <option value="">Select a network item</option>
-                        <option value="edge">edge</option>
-                        <option value="node">node</option>
-                    </select>
-                  </div>
-                  <div class="col-3 pb-2">
-                    <select
-                            class="form-select"
-                            aria-label="Default select example"
-                            onchange="updateFilter(value, 'property')"
-                            id="select-property"
-                        >
-                        <option value="">Select a property...</option>
-                    </select>
-                  </div>
-                  <div class="col-3 pb-2">
-                    <select
-                            class="form-select"
-                            aria-label="Default select example"
-                            id="select-value"
-                        >
-                        <option value="">Select value(s)...</option>
-                    </select>
-                  </div>
-                  <div class="col-1 pb-2">
-                    <button type="button" class="btn btn-primary btn-block" onclick="highlightFilter(filter);">Filter</button>
-                  </div>
-                  <div class="col-2 pb-2">
-                    <button type="button" class="btn btn-primary btn-block" onclick="clearFilter(true)">Reset Selection</button>
-                  </div>
-                </div>
-              </div>
-            
             <div id="mynetwork" class="card-body"></div>
         </div>
 
         
-        
-            <div id="config"></div>
         
 
         <script type="text/javascript">
@@ -399,132 +409,6 @@ function highlightFilter(filter) {
               
 
               
-                  // explicitly using onItemAdd and this function as we need to save multiple values
-                  let updateValueFilter = function() {
-                      return function () {
-                      filter['value'].push(arguments[0])
-                      }
-                  }
-
-                  let valueControl = new TomSelect("#select-value",{
-                      maxItems: null,
-                      valueField: 'id',
-                      labelField: 'title',
-                      searchField: 'title',
-                      create: false,
-                      sortField: {
-                          field: "text",
-                          direction: "asc"
-                      },
-                      onItemAdd: updateValueFilter()
-                  });
-
-                  let addValues = function() {
-                      return function () {
-                          // clear the current value options and add the selected attribute values
-                          // tom-select handles duplicates
-                          let selectedProperty = arguments[0];
-                          valueControl.clear();
-                          valueControl.clearOptions();
-                          filter['value'] = []
-                          if (filter['item'] === 'node') {
-                              for (let each in allNodes) {
-                                  valueControl.addOption({
-                                      id:allNodes[each][selectedProperty],
-                                      title:allNodes[each][selectedProperty]
-                                  })
-                              }
-                          }
-                          else if (filter['item'] === 'edge') {
-                              for (let each in allEdges) {
-                                  valueControl.addOption({
-                                      id:allEdges[each][selectedProperty],
-                                      title:allEdges[each][selectedProperty]
-                                  })
-                              }
-                          }
-                      }
-                  };
-
-                  let propControl = new TomSelect("#select-property",{
-                      valueField: 'id',
-                      labelField: 'title',
-                      searchField: 'title',
-                      create: false,
-                      sortField: {
-                          field: "text",
-                          direction: "asc"
-                      },
-                      onItemAdd: addValues()
-                  });
-
-                  let addProperties = function() {
-                      return function () {
-                          // loops through the selected network item and adds the attributes to dropdown
-                          // tom-select handles duplicates
-                          clearFilter(false)
-                          if (arguments[0] === 'edge') {
-                              for (let each in allEdges) {
-                                  if (allEdges.hasOwnProperty(each)) {
-                                      for (let eachProp in allEdges[each]) {
-                                          if (allEdges[each].hasOwnProperty(eachProp)) {
-                                              propControl.addOption({id: eachProp, title: eachProp})
-                                          }
-                                      }
-                                  }
-                              }
-                          }
-                          else if (arguments[0] === 'node') {
-                              for (let each in allNodes) {
-                                  if (allNodes.hasOwnProperty(each)) {
-                                      for (let eachProp in allNodes[each]) {
-                                          if (allNodes[each].hasOwnProperty(eachProp)
-                                              && (eachProp !== 'hidden' && eachProp !== 'savedLabel'
-                                                  && eachProp !== 'hiddenLabel')) {
-                                              propControl.addOption({id: eachProp, title: eachProp})
-
-                                          }
-                                      }
-                                  }
-                              }
-                          }
-                      }
-                  };
-
-                  let itemControl = new TomSelect("#select-item",{
-                      create: false,
-                      sortField:{
-                          field: "text",
-                          direction: "asc"
-                      },
-                      onItemAdd: addProperties()
-                  });
-
-                  function clearFilter(reset) {
-                      // utility function to clear all the selected filter options
-                      // if reset is set to true, the existing filter will be removed
-                      // else, only the dropdown options are cleared
-                      propControl.clear();
-                      propControl.clearOptions();
-                      valueControl.clear();
-                      valueControl.clearOptions();
-                      filter = {
-                          item : '',
-                          property : '',
-                          value : []
-                      }
-                      if (reset) {
-                          itemControl.clear();
-                          filterHighlight({nodes: []})
-                      }
-                  }
-
-                  function updateFilter(value, key) {
-                      // key could be 'item' or 'property' and value is as selected in dropdown
-                      filter[key] = value
-                  }
-
-              
 
               // This method is responsible for drawing the graph, returns the drawn network
               function drawGraph() {
@@ -533,8 +417,8 @@ function highlightFilter(filter) {
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#FFFF00", "id": "group:all staff:*", "label": "group:all staff:*", "shape": "dot", "title": "group:all staff:*"}, {"color": "#00cc66", "id": "tag:domain-controller", "label": "tag:domain-controller", "shape": "dot", "title": "tag:domain-controller"}, {"color": "#00cc66", "id": "tag:prod:*", "label": "tag:prod:*", "shape": "dot", "title": "tag:prod:*"}, {"color": "#FFFF00", "id": "autogroup:self:*", "label": "autogroup:self:*", "shape": "dot", "title": "autogroup:self:*"}, {"color": "#ff6666", "id": "uat1:22", "label": "uat1:22", "shape": "dot", "title": "100.101.102.103"}, {"color": "#FFFF00", "id": "group:dba", "label": "group:dba", "shape": "dot", "title": "Group Members: dba1@example.com"}, {"color": "#ff6666", "id": "production-backend:*", "label": "production-backend:*", "shape": "dot", "title": "104.105.106.0/24"}, {"color": "#ff6666", "id": "web-server:443", "label": "web-server:443", "shape": "dot", "title": "108.109.110.112"}, {"color": "#FFFF00", "id": "group:all staff", "label": "group:all staff", "shape": "dot", "title": "Group Members: all staff@example.com"}, {"color": "#00cc66", "id": "tag:ci", "label": "tag:ci", "shape": "dot", "title": "tag:ci"}, {"color": "#00cc66", "id": "tag:database", "label": "tag:database", "shape": "dot", "title": "tag:database"}, {"color": "#00cc66", "id": "tag:database:*", "label": "tag:database:*", "shape": "dot", "title": "tag:database:*"}, {"color": "#FFFF00", "id": "group:system_admin", "label": "group:system_admin", "shape": "dot", "title": "Group Members: sysadmin1@example.com, sysadmin2@example.com"}, {"color": "#FFFF00", "id": "autogroup:member", "label": "autogroup:member", "shape": "dot", "title": "autogroup:member"}, {"color": "#00cc66", "id": "tag:database:5432", "label": "tag:database:5432", "shape": "dot", "title": "tag:database:5432"}, {"color": "#00cc66", "id": "tag:prod", "label": "tag:prod", "shape": "dot", "title": "tag:prod"}, {"color": "#ff6666", "id": "*:*", "label": "*:*", "shape": "dot", "title": "*:*"}, {"color": "#00cc66", "id": "tag:security", "label": "tag:security", "shape": "dot", "title": "tag:security"}, {"color": "#FFFF00", "id": "group:dev team", "label": "group:dev team", "shape": "dot", "title": "Group Members: dev team@example.com"}, {"color": "#00cc66", "id": "tag:domain-controller:*", "label": "tag:domain-controller:*", "shape": "dot", "title": "tag:domain-controller:*"}, {"color": "#FFFF00", "id": "group:sre", "label": "group:sre", "shape": "dot", "title": "Group Members: sre@example.com"}, {"color": "#00cc66", "id": "tag:webserver", "label": "tag:webserver", "shape": "dot", "title": "tag:webserver"}]);
-                  edges = new vis.DataSet([{"arrows": {"to": {"enabled": true}}, "from": "tag:security", "to": "*:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:system_admin", "to": "*:*"}, {"arrows": {"to": {"enabled": true}}, "from": "autogroup:member", "to": "autogroup:self:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:all staff", "to": "tag:domain-controller:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:domain-controller", "to": "group:all staff:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:domain-controller", "to": "tag:domain-controller:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:dba", "to": "tag:database:5432"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:database", "to": "tag:database:5432"}, {"arrows": {"to": {"enabled": true}}, "from": "group:dev team", "to": "uat1:22"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:ci", "to": "uat1:22"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:prod", "to": "tag:prod:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:webserver", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:webserver", "to": "web-server:443"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "production-backend:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "uat1:22"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "web-server:443"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "tag:webserver"}]);
+                  nodes = new vis.DataSet([{"color": "#FFFF00", "id": "group:dba", "label": "group:dba", "shape": "dot", "title": "group:dba\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 7 (Ln 118)\n\ud83d\udc65 Group Members: dba1@example.com"}, {"color": "#ff6666", "id": "web-server:443", "label": "web-server:443", "shape": "dot", "title": "web-server:443\n\u2139\ufe0f  108.109.110.112\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: ACL rule 11 (Ln 144), ACL rule 12 (Ln 151)"}, {"color": "#FFFF00", "id": "autogroup:internet", "label": "autogroup:internet", "shape": "triangle", "title": "autogroup:internet\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: Grant rule 3 (Ln 177), Grant rule 8 (Ln 208)\n\ud83d\udee4\ufe0f  Via Routes: tag:exit-node-nyc"}, {"color": "#FFFF00", "id": "group:dev team", "label": "group:dev team", "shape": "dot", "title": "group:dev team\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 8 (Ln 125)\n\ud83d\udc65 Group Members: dev team@example.com"}, {"color": "#00cc66", "id": "tag:staging", "label": "tag:staging", "shape": "triangle", "title": "tag:staging\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 17 (Ln 279)\n  \u2022 Destination: Grant rule 12 (Ln 240)\n\ud83c\udf10 Protocols: tcp:22, tcp:8443, tcp:80, tcp:443\n\ud83d\udee4\ufe0f  Via Routes: api-gateway, internal-tool\n\ud83d\udd10 Posture Checks: posture:complianceDevice\n\ud83d\udcf1 Applications: deployment-pipeline"}, {"color": "#00cc66", "id": "tag:backend [tcp:8080,443]", "label": "tag:backend [tcp:8080,443]", "shape": "triangle", "title": "tag:backend [tcp:8080,443]"}, {"color": "#FFFF00", "id": "group:devops", "label": "group:devops", "shape": "triangle", "title": "group:devops\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 19 (Ln 294)\n\ud83d\udc65 Group Members: carl@example.com"}, {"color": "#00cc66", "id": "tag:staging [tcp:22,80]", "label": "tag:staging [tcp:22,80]", "shape": "triangle", "title": "tag:staging [tcp:22,80]"}, {"color": "#ff6666", "id": "*:*", "label": "*:*", "shape": "dot", "title": "*:*\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: ACL rule 1 (Ln 80), ACL rule 2 (Ln 87)"}, {"color": "#00cc66", "id": "tag:production", "label": "tag:production", "shape": "triangle", "title": "tag:production\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: Grant rule 9 (Ln 216), Grant rule 11 (Ln 232), Grant rule 17 (Ln 279)\n\ud83c\udf10 Protocols: *, tcp:443, tcp:8443\n\ud83d\udee4\ufe0f  Via Routes: api-gateway\n\ud83d\udcf1 Applications: deployment-pipeline"}, {"color": "#00cc66", "id": "tag:backend [tcp:15000-15010,9080]", "label": "tag:backend [tcp:15000-15010,9080]", "shape": "triangle", "title": "tag:backend [tcp:15000-15010,9080]"}, {"color": "#00cc66", "id": "tag:webserver", "label": "tag:webserver", "shape": "dot", "title": "tag:webserver\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 10 (Ln 139), ACL rule 11 (Ln 144)\n  \u2022 Destination: ACL rule 12 (Ln 151)"}, {"color": "#ff6666", "id": "database [tcp:5432,3306]", "label": "database [tcp:5432,3306]", "shape": "triangle", "title": "database [tcp:5432,3306]"}, {"color": "#00cc66", "id": "tag:production [tcp:443,8443]", "label": "tag:production [tcp:443,8443]", "shape": "triangle", "title": "tag:production [tcp:443,8443]"}, {"color": "#00cc66", "id": "tag:security", "label": "tag:security", "shape": "dot", "title": "tag:security\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 1 (Ln 80)"}, {"color": "#00cc66", "id": "tag:database", "label": "tag:database", "shape": "dot", "title": "tag:database\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 7 (Ln 118)"}, {"color": "#FFFF00", "id": "group:sales", "label": "group:sales", "shape": "triangle", "title": "group:sales\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 7 (Ln 201)\n\ud83c\udf10 Protocols: tcp:22, tcp:443\n\ud83d\udc65 Group Members: sales1@company.com, sales2@company.com"}, {"color": "#00cc66", "id": "tag:domain-controller:*", "label": "tag:domain-controller:*", "shape": "dot", "title": "tag:domain-controller:*\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: ACL rule 4 (Ln 101), ACL rule 6 (Ln 111)"}, {"color": "#FFFF00", "id": "autogroup:self", "label": "autogroup:self", "shape": "triangle", "title": "autogroup:self\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: Grant rule 2 (Ln 172)"}, {"color": "#FFFF00", "id": "group:all staff:*", "label": "group:all staff:*", "shape": "dot", "title": "group:all staff:*\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: ACL rule 5 (Ln 106)"}, {"color": "#00cc66", "id": "tag:backend", "label": "tag:backend", "shape": "triangle", "title": "tag:backend\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 5 (Ln 189), Grant rule 14 (Ln 257)\n  \u2022 Destination: Grant rule 4 (Ln 184), Grant rule 10 (Ln 224), Grant rule 14 (Ln 257), Grant rule 15 (Ln 265)\n\ud83c\udf10 Protocols: tcp:9090, tcp:15000-15010, tcp:514, udp:514, tcp:9080, tcp:443, tcp:9100, tcp:8080, udp:161\n\ud83d\udcf1 Applications: webapp-connector, service-mesh"}, {"color": "#00cc66", "id": "tag:ci", "label": "tag:ci", "shape": "hexagon", "title": "tag:ci\n\ud83d\udd04 Mixed (ACL + Grant Rules)\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 8 (Ln 125)\n  \u2022 Destination: Grant rule 19 (Ln 294)"}, {"color": "#FFFF00", "id": "group:dev", "label": "group:dev", "shape": "triangle", "title": "group:dev\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 18 (Ln 289)\n\ud83d\udc65 Group Members: alice@example.com, bob@example.com"}, {"color": "#00cc66", "id": "tag:domain-controller", "label": "tag:domain-controller", "shape": "dot", "title": "tag:domain-controller\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 5 (Ln 106), ACL rule 6 (Ln 111)"}, {"color": "#FFFF00", "id": "group:sre", "label": "group:sre", "shape": "dot", "title": "group:sre\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 10 (Ln 139), ACL rule 12 (Ln 151)\n\ud83d\udc65 Group Members: sre@example.com"}, {"color": "#ff6666", "id": "uat1:22", "label": "uat1:22", "shape": "dot", "title": "uat1:22\n\u2139\ufe0f  100.101.102.103\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: ACL rule 8 (Ln 125), ACL rule 12 (Ln 151)"}, {"color": "#FFFF00", "id": "group:contractors", "label": "group:contractors", "shape": "triangle", "title": "group:contractors\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 12 (Ln 240)\n\ud83c\udf10 Protocols: tcp:22, tcp:80\n\ud83d\udee4\ufe0f  Via Routes: internal-tool\n\ud83d\udc65 Group Members: contractor@external.com"}, {"color": "#FFFF00", "id": "autogroup:member", "label": "autogroup:member", "shape": "hexagon", "title": "autogroup:member\n\ud83d\udd04 Mixed (ACL + Grant Rules)\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 3 (Ln 94), Grant rule 2 (Ln 172), Grant rule 3 (Ln 177)"}, {"color": "#00cc66", "id": "tag:prod:*", "label": "tag:prod:*", "shape": "dot", "title": "tag:prod:*\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: ACL rule 9 (Ln 132)"}, {"color": "#00cc66", "id": "tag:frontend [udp:161, tcp:9100,8080]", "label": "tag:frontend [udp:161, tcp:9100,8080]", "shape": "triangle", "title": "tag:frontend [udp:161, tcp:9100,8080]"}, {"color": "#00cc66", "id": "tag:logging [tcp:514, udp:514]", "label": "tag:logging [tcp:514, udp:514]", "shape": "triangle", "title": "tag:logging [tcp:514, udp:514]"}, {"color": "#ff6666", "id": "production-backend:*", "label": "production-backend:*", "shape": "dot", "title": "production-backend:*\n\u2139\ufe0f  104.105.106.0/24\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: ACL rule 12 (Ln 151)"}, {"color": "#FFFF00", "id": "group:mobile", "label": "group:mobile", "shape": "triangle", "title": "group:mobile\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 9 (Ln 216)\n\ud83c\udf10 Protocols: tcp:443\n\ud83d\udd10 Posture Checks: posture:latestMac\n\ud83d\udc65 Group Members: mobile@company.com"}, {"color": "#FFFF00", "id": "group:all staff", "label": "group:all staff", "shape": "dot", "title": "group:all staff\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 4 (Ln 101)\n\ud83d\udc65 Group Members: all staff@example.com"}, {"color": "#00cc66", "id": "tag:logging", "label": "tag:logging", "shape": "triangle", "title": "tag:logging\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 15 (Ln 265)\n  \u2022 Destination: Grant rule 5 (Ln 189)\n\ud83c\udf10 Protocols: tcp:514, udp:514, tcp:9100, tcp:8080, udp:161"}, {"color": "#00cc66", "id": "tag:database:*", "label": "tag:database:*", "shape": "dot", "title": "tag:database:*\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: ACL rule 10 (Ln 139), ACL rule 12 (Ln 151)"}, {"color": "#00cc66", "id": "tag:internal-tools [tcp:443,22]", "label": "tag:internal-tools [tcp:443,22]", "shape": "triangle", "title": "tag:internal-tools [tcp:443,22]"}, {"color": "#00cc66", "id": "tag:backend [udp:161, tcp:9100,8080]", "label": "tag:backend [udp:161, tcp:9100,8080]", "shape": "triangle", "title": "tag:backend [udp:161, tcp:9100,8080]"}, {"color": "#ff6666", "id": "* [tcp:22]", "label": "* [tcp:22]", "shape": "triangle", "title": "* [tcp:22]"}, {"color": "#00cc66", "id": "tag:backend [tcp:8080,9090]", "label": "tag:backend [tcp:8080,9090]", "shape": "triangle", "title": "tag:backend [tcp:8080,9090]"}, {"color": "#ff6666", "id": "*", "label": "*", "shape": "triangle", "title": "*\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 1 (Ln 167)\n  \u2022 Destination: Grant rule 1 (Ln 167), Grant rule 16 (Ln 272)\n\ud83c\udf10 Protocols: *, tcp:22"}, {"color": "#FFFF00", "id": "group:eng", "label": "group:eng", "shape": "triangle", "title": "group:eng\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 6 (Ln 196), Grant rule 13 (Ln 248)\n\ud83c\udf10 Protocols: *, tcp:3306, tcp:5432\n\ud83d\udee4\ufe0f  Via Routes: api-gateway\n\ud83d\udd10 Posture Checks: posture:complianceDevice\n\ud83d\udc65 Group Members: dev1@company.com, dev2@company.com"}, {"color": "#FFFF00", "id": "group:system_admin", "label": "group:system_admin", "shape": "dot", "title": "group:system_admin\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 2 (Ln 87)\n\ud83d\udc65 Group Members: sysadmin1@example.com, sysadmin2@example.com"}, {"color": "#00cc66", "id": "tag:database:5432", "label": "tag:database:5432", "shape": "dot", "title": "tag:database:5432\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: ACL rule 7 (Ln 118)"}, {"color": "#FFFF00", "id": "autogroup:self:*", "label": "autogroup:self:*", "shape": "dot", "title": "autogroup:self:*\n\ud83d\udd12 Legacy ACL Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: ACL rule 3 (Ln 94)"}, {"color": "#00cc66", "id": "tag:prod", "label": "tag:prod", "shape": "hexagon", "title": "tag:prod\n\ud83d\udd04 Mixed (ACL + Grant Rules)\n\ud83d\udccb Rule References:\n  \u2022 Source: ACL rule 9 (Ln 132)\n  \u2022 Destination: Grant rule 19 (Ln 294)"}, {"color": "#00cc66", "id": "tag:internal-tools", "label": "tag:internal-tools", "shape": "triangle", "title": "tag:internal-tools\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: Grant rule 6 (Ln 196), Grant rule 7 (Ln 201)\n\ud83c\udf10 Protocols: tcp:22, *, tcp:443"}, {"color": "#00cc66", "id": "tag:production [tcp:443]", "label": "tag:production [tcp:443]", "shape": "triangle", "title": "tag:production [tcp:443]"}, {"color": "#00cc66", "id": "tag:dev", "label": "tag:dev", "shape": "triangle", "title": "tag:dev\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Destination: Grant rule 18 (Ln 289)"}, {"color": "#FFFF00", "id": "group:admin", "label": "group:admin", "shape": "triangle", "title": "group:admin\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 11 (Ln 232), Grant rule 16 (Ln 272)\n\ud83c\udf10 Protocols: *, tcp:22\n\ud83d\udd10 Posture Checks: posture:complianceDevice\n\ud83d\udc65 Group Members: admin@company.com"}, {"color": "#FFFF00", "id": "group:nyc", "label": "group:nyc", "shape": "triangle", "title": "group:nyc\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 8 (Ln 208)\n\ud83d\udee4\ufe0f  Via Routes: tag:exit-node-nyc\n\ud83d\udc65 Group Members: nyc-user@company.com"}, {"color": "#00cc66", "id": "tag:frontend", "label": "tag:frontend", "shape": "triangle", "title": "tag:frontend\n\ud83c\udfaf Modern Grant Rules\n\ud83d\udccb Rule References:\n  \u2022 Source: Grant rule 4 (Ln 184), Grant rule 10 (Ln 224)\n  \u2022 Destination: Grant rule 15 (Ln 265)\n\ud83c\udf10 Protocols: tcp:9090, tcp:443, tcp:9100, tcp:8080, udp:161\n\ud83d\udcf1 Applications: webapp-connector"}]);
+                  edges = new vis.DataSet([{"arrows": {"to": {"enabled": true}}, "from": "tag:logging", "to": "tag:backend [udp:161, tcp:9100,8080]"}, {"arrows": {"to": {"enabled": true}}, "from": "group:contractors", "to": "tag:staging [tcp:22,80]"}, {"arrows": {"to": {"enabled": true}}, "from": "group:dba", "to": "tag:database:5432"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:prod", "to": "tag:prod:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "production-backend:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:staging", "to": "tag:production [tcp:443,8443]"}, {"arrows": {"to": {"enabled": true}}, "from": "autogroup:member", "to": "autogroup:self"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:frontend", "to": "tag:backend [tcp:8080,443]"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sales", "to": "tag:internal-tools [tcp:443,22]"}, {"arrows": {"to": {"enabled": true}}, "from": "group:nyc", "to": "autogroup:internet"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:frontend", "to": "tag:backend [tcp:8080,9090]"}, {"arrows": {"to": {"enabled": true}}, "from": "group:eng", "to": "tag:internal-tools"}, {"arrows": {"to": {"enabled": true}}, "from": "group:devops", "to": "tag:prod"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:ci", "to": "uat1:22"}, {"arrows": {"to": {"enabled": true}}, "from": "group:system_admin", "to": "*:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:security", "to": "*:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:admin", "to": "* [tcp:22]"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:logging", "to": "tag:frontend [udp:161, tcp:9100,8080]"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:webserver", "to": "web-server:443"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:domain-controller", "to": "group:all staff:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "tag:webserver"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:backend", "to": "tag:backend [tcp:15000-15010,9080]"}, {"arrows": {"to": {"enabled": true}}, "from": "autogroup:member", "to": "autogroup:self:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "web-server:443"}, {"arrows": {"to": {"enabled": true}}, "from": "group:eng", "to": "database [tcp:5432,3306]"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:webserver", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:dev", "to": "tag:dev"}, {"arrows": {"to": {"enabled": true}}, "from": "group:mobile", "to": "tag:production [tcp:443]"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "tag:database:*"}, {"arrows": {"to": {"enabled": true}}, "from": "group:sre", "to": "uat1:22"}, {"arrows": {"to": {"enabled": true}}, "from": "group:devops", "to": "tag:ci"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:backend", "to": "tag:logging [tcp:514, udp:514]"}, {"arrows": {"to": {"enabled": true}}, "from": "group:admin", "to": "tag:production"}, {"arrows": {"to": {"enabled": true}}, "from": "group:all staff", "to": "tag:domain-controller:*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:database", "to": "tag:database:5432"}, {"arrows": {"to": {"enabled": true}}, "from": "group:dev team", "to": "uat1:22"}, {"arrows": {"to": {"enabled": true}}, "from": "autogroup:member", "to": "autogroup:internet"}, {"arrows": {"to": {"enabled": true}}, "from": "*", "to": "*"}, {"arrows": {"to": {"enabled": true}}, "from": "tag:domain-controller", "to": "tag:domain-controller:*"}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });
@@ -547,7 +431,7 @@ function highlightFilter(filter) {
 
                   var options = {
     "configure": {
-        "enabled": true
+        "enabled": false
     },
     "edges": {
         "color": {
@@ -579,10 +463,6 @@ function highlightFilter(filter) {
 
 
                   
-                  // if this network requires displaying the configure window,
-                  // put it in its div
-                  options.configure["container"] = document.getElementById("config");
-                  
 
                   network = new vis.Network(container, data, options);
 
@@ -604,14 +484,808 @@ function highlightFilter(filter) {
               }
               drawGraph();
         </script>
-    </body>
-</html>
-<div style="position: absolute; top: 10px; right: 10px; background-color: #f5f5f5; padding: 10px; border: 1px solid #ccc;">
-    <h3>Legend</h3>
-    <div style="background-color: #FFFF00; width: 20px; height: 20px; display: inline-block;"></div>
-    <span>Group</span><br>
-    <div style="background-color: #00cc66; width: 20px; height: 20px; display: inline-block;"></div>
-    <span>Tag</span><br>
-    <div style="background-color: #ff6666; width: 20px; height: 20px; display: inline-block;"></div>
-    <span>Host</span>
+    
+<script>
+// Enhanced search metadata
+const searchMetadata = {"nodes": {"tag:security": {"node_id": "tag:security", "rule_type": "ACL", "src_rules": ["ACL rule 1 (Ln 80)"], "dst_rules": [], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "*:*": {"node_id": "*:*", "rule_type": "ACL", "src_rules": [], "dst_rules": ["ACL rule 1 (Ln 80)", "ACL rule 2 (Ln 87)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "group:system_admin": {"node_id": "group:system_admin", "rule_type": "ACL", "src_rules": ["ACL rule 2 (Ln 87)"], "dst_rules": [], "protocols": [], "via": [], "posture": [], "apps": [], "members": ["sysadmin1@example.com", "sysadmin2@example.com"]}, "autogroup:member": {"node_id": "autogroup:member", "rule_type": "Mixed", "src_rules": ["ACL rule 3 (Ln 94)", "Grant rule 2 (Ln 172)", "Grant rule 3 (Ln 177)"], "dst_rules": [], "protocols": ["*", "*"], "via": [], "posture": [], "apps": [], "members": []}, "autogroup:self:*": {"node_id": "autogroup:self:*", "rule_type": "ACL", "src_rules": [], "dst_rules": ["ACL rule 3 (Ln 94)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "group:all staff": {"node_id": "group:all staff", "rule_type": "ACL", "src_rules": ["ACL rule 4 (Ln 101)"], "dst_rules": [], "protocols": [], "via": [], "posture": [], "apps": [], "members": ["all staff@example.com"]}, "tag:domain-controller:*": {"node_id": "tag:domain-controller:*", "rule_type": "ACL", "src_rules": [], "dst_rules": ["ACL rule 4 (Ln 101)", "ACL rule 6 (Ln 111)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "tag:domain-controller": {"node_id": "tag:domain-controller", "rule_type": "ACL", "src_rules": ["ACL rule 5 (Ln 106)", "ACL rule 6 (Ln 111)"], "dst_rules": [], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "group:all staff:*": {"node_id": "group:all staff:*", "rule_type": "ACL", "src_rules": [], "dst_rules": ["ACL rule 5 (Ln 106)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "group:dba": {"node_id": "group:dba", "rule_type": "ACL", "src_rules": ["ACL rule 7 (Ln 118)"], "dst_rules": [], "protocols": [], "via": [], "posture": [], "apps": [], "members": ["dba1@example.com"]}, "tag:database": {"node_id": "tag:database", "rule_type": "ACL", "src_rules": ["ACL rule 7 (Ln 118)"], "dst_rules": [], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "tag:database:5432": {"node_id": "tag:database:5432", "rule_type": "ACL", "src_rules": [], "dst_rules": ["ACL rule 7 (Ln 118)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "tag:ci": {"node_id": "tag:ci", "rule_type": "Mixed", "src_rules": ["ACL rule 8 (Ln 125)"], "dst_rules": ["Grant rule 19 (Ln 294)"], "protocols": ["*"], "via": [], "posture": [], "apps": [], "members": []}, "group:dev team": {"node_id": "group:dev team", "rule_type": "ACL", "src_rules": ["ACL rule 8 (Ln 125)"], "dst_rules": [], "protocols": [], "via": [], "posture": [], "apps": [], "members": ["dev team@example.com"]}, "uat1:22": {"node_id": "uat1:22", "rule_type": "ACL", "src_rules": [], "dst_rules": ["ACL rule 8 (Ln 125)", "ACL rule 12 (Ln 151)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "tag:prod": {"node_id": "tag:prod", "rule_type": "Mixed", "src_rules": ["ACL rule 9 (Ln 132)"], "dst_rules": ["Grant rule 19 (Ln 294)"], "protocols": ["*"], "via": [], "posture": [], "apps": [], "members": []}, "tag:prod:*": {"node_id": "tag:prod:*", "rule_type": "ACL", "src_rules": [], "dst_rules": ["ACL rule 9 (Ln 132)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "tag:webserver": {"node_id": "tag:webserver", "rule_type": "ACL", "src_rules": ["ACL rule 10 (Ln 139)", "ACL rule 11 (Ln 144)"], "dst_rules": ["ACL rule 12 (Ln 151)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "group:sre": {"node_id": "group:sre", "rule_type": "ACL", "src_rules": ["ACL rule 10 (Ln 139)", "ACL rule 12 (Ln 151)"], "dst_rules": [], "protocols": [], "via": [], "posture": [], "apps": [], "members": ["sre@example.com"]}, "tag:database:*": {"node_id": "tag:database:*", "rule_type": "ACL", "src_rules": [], "dst_rules": ["ACL rule 10 (Ln 139)", "ACL rule 12 (Ln 151)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "web-server:443": {"node_id": "web-server:443", "rule_type": "ACL", "src_rules": [], "dst_rules": ["ACL rule 11 (Ln 144)", "ACL rule 12 (Ln 151)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "production-backend:*": {"node_id": "production-backend:*", "rule_type": "ACL", "src_rules": [], "dst_rules": ["ACL rule 12 (Ln 151)"], "protocols": [], "via": [], "posture": [], "apps": [], "members": []}, "*": {"node_id": "*", "rule_type": "Grant", "src_rules": ["Grant rule 1 (Ln 167)"], "dst_rules": ["Grant rule 1 (Ln 167)", "Grant rule 16 (Ln 272)"], "protocols": ["*", "*", "tcp:22"], "via": [], "posture": [], "apps": [], "members": []}, "autogroup:self": {"node_id": "autogroup:self", "rule_type": "Grant", "src_rules": [], "dst_rules": ["Grant rule 2 (Ln 172)"], "protocols": ["*"], "via": [], "posture": [], "apps": [], "members": []}, "autogroup:internet": {"node_id": "autogroup:internet", "rule_type": "Grant", "src_rules": [], "dst_rules": ["Grant rule 3 (Ln 177)", "Grant rule 8 (Ln 208)"], "protocols": ["*", "*"], "via": ["tag:exit-node-nyc"], "posture": [], "apps": [], "members": []}, "tag:frontend": {"node_id": "tag:frontend", "rule_type": "Grant", "src_rules": ["Grant rule 4 (Ln 184)", "Grant rule 10 (Ln 224)"], "dst_rules": ["Grant rule 15 (Ln 265)"], "protocols": ["tcp:8080", "tcp:443", "tcp:8080", "tcp:9090", "udp:161", "tcp:9100", "tcp:8080"], "via": [], "posture": [], "apps": ["webapp-connector"], "members": []}, "tag:backend": {"node_id": "tag:backend", "rule_type": "Grant", "src_rules": ["Grant rule 5 (Ln 189)", "Grant rule 14 (Ln 257)"], "dst_rules": ["Grant rule 4 (Ln 184)", "Grant rule 10 (Ln 224)", "Grant rule 14 (Ln 257)", "Grant rule 15 (Ln 265)"], "protocols": ["tcp:8080", "tcp:443", "tcp:514", "udp:514", "tcp:8080", "tcp:9090", "tcp:15000-15010", "tcp:9080", "tcp:15000-15010", "tcp:9080", "udp:161", "tcp:9100", "tcp:8080"], "via": [], "posture": [], "apps": ["webapp-connector", "service-mesh", "service-mesh"], "members": []}, "tag:logging": {"node_id": "tag:logging", "rule_type": "Grant", "src_rules": ["Grant rule 15 (Ln 265)"], "dst_rules": ["Grant rule 5 (Ln 189)"], "protocols": ["tcp:514", "udp:514", "udp:161", "tcp:9100", "tcp:8080"], "via": [], "posture": [], "apps": [], "members": []}, "group:eng": {"node_id": "group:eng", "rule_type": "Grant", "src_rules": ["Grant rule 6 (Ln 196)", "Grant rule 13 (Ln 248)"], "dst_rules": [], "protocols": ["*", "tcp:5432", "tcp:3306"], "via": ["api-gateway"], "posture": ["posture:complianceDevice"], "apps": [], "members": ["dev1@company.com", "dev2@company.com"]}, "tag:internal-tools": {"node_id": "tag:internal-tools", "rule_type": "Grant", "src_rules": [], "dst_rules": ["Grant rule 6 (Ln 196)", "Grant rule 7 (Ln 201)"], "protocols": ["*", "tcp:443", "tcp:22"], "via": [], "posture": [], "apps": [], "members": []}, "group:sales": {"node_id": "group:sales", "rule_type": "Grant", "src_rules": ["Grant rule 7 (Ln 201)"], "dst_rules": [], "protocols": ["tcp:443", "tcp:22"], "via": [], "posture": [], "apps": [], "members": ["sales1@company.com", "sales2@company.com"]}, "group:nyc": {"node_id": "group:nyc", "rule_type": "Grant", "src_rules": ["Grant rule 8 (Ln 208)"], "dst_rules": [], "protocols": ["*"], "via": ["tag:exit-node-nyc"], "posture": [], "apps": [], "members": ["nyc-user@company.com"]}, "group:mobile": {"node_id": "group:mobile", "rule_type": "Grant", "src_rules": ["Grant rule 9 (Ln 216)"], "dst_rules": [], "protocols": ["tcp:443"], "via": [], "posture": ["posture:latestMac"], "apps": [], "members": ["mobile@company.com"]}, "tag:production": {"node_id": "tag:production", "rule_type": "Grant", "src_rules": [], "dst_rules": ["Grant rule 9 (Ln 216)", "Grant rule 11 (Ln 232)", "Grant rule 17 (Ln 279)"], "protocols": ["tcp:443", "*", "tcp:443", "tcp:8443"], "via": ["api-gateway"], "posture": [], "apps": ["deployment-pipeline"], "members": []}, "group:admin": {"node_id": "group:admin", "rule_type": "Grant", "src_rules": ["Grant rule 11 (Ln 232)", "Grant rule 16 (Ln 272)"], "dst_rules": [], "protocols": ["*", "tcp:22"], "via": [], "posture": ["posture:complianceDevice"], "apps": [], "members": ["admin@company.com"]}, "group:contractors": {"node_id": "group:contractors", "rule_type": "Grant", "src_rules": ["Grant rule 12 (Ln 240)"], "dst_rules": [], "protocols": ["tcp:22", "tcp:80"], "via": ["internal-tool"], "posture": [], "apps": [], "members": ["contractor@external.com"]}, "tag:staging": {"node_id": "tag:staging", "rule_type": "Grant", "src_rules": ["Grant rule 17 (Ln 279)"], "dst_rules": ["Grant rule 12 (Ln 240)"], "protocols": ["tcp:22", "tcp:80", "tcp:443", "tcp:8443"], "via": ["internal-tool", "api-gateway"], "posture": ["posture:complianceDevice"], "apps": ["deployment-pipeline"], "members": []}, "database": {"node_id": "database", "rule_type": "Grant", "src_rules": [], "dst_rules": ["Grant rule 13 (Ln 248)"], "protocols": ["tcp:5432", "tcp:3306"], "via": ["api-gateway"], "posture": [], "apps": [], "members": []}, "group:dev": {"node_id": "group:dev", "rule_type": "Grant", "src_rules": ["Grant rule 18 (Ln 289)"], "dst_rules": [], "protocols": ["*"], "via": [], "posture": [], "apps": [], "members": ["alice@example.com", "bob@example.com"]}, "tag:dev": {"node_id": "tag:dev", "rule_type": "Grant", "src_rules": [], "dst_rules": ["Grant rule 18 (Ln 289)"], "protocols": ["*"], "via": [], "posture": [], "apps": [], "members": []}, "group:devops": {"node_id": "group:devops", "rule_type": "Grant", "src_rules": ["Grant rule 19 (Ln 294)"], "dst_rules": [], "protocols": ["*"], "via": [], "posture": [], "apps": [], "members": ["carl@example.com"]}}, "edges": {"tag:security->*:*": {"src": "tag:security", "dst": "*:*", "rule_type": "ACL", "rule_index": 1, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "group:system_admin->*:*": {"src": "group:system_admin", "dst": "*:*", "rule_type": "ACL", "rule_index": 2, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "autogroup:member->autogroup:self:*": {"src": "autogroup:member", "dst": "autogroup:self:*", "rule_type": "ACL", "rule_index": 3, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "group:all staff->tag:domain-controller:*": {"src": "group:all staff", "dst": "tag:domain-controller:*", "rule_type": "ACL", "rule_index": 4, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "tag:domain-controller->group:all staff:*": {"src": "tag:domain-controller", "dst": "group:all staff:*", "rule_type": "ACL", "rule_index": 5, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "tag:domain-controller->tag:domain-controller:*": {"src": "tag:domain-controller", "dst": "tag:domain-controller:*", "rule_type": "ACL", "rule_index": 6, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "group:dba->tag:database:5432": {"src": "group:dba", "dst": "tag:database:5432", "rule_type": "ACL", "rule_index": 7, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "tag:database->tag:database:5432": {"src": "tag:database", "dst": "tag:database:5432", "rule_type": "ACL", "rule_index": 7, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "tag:ci->uat1:22": {"src": "tag:ci", "dst": "uat1:22", "rule_type": "ACL", "rule_index": 8, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "group:dev team->uat1:22": {"src": "group:dev team", "dst": "uat1:22", "rule_type": "ACL", "rule_index": 8, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "tag:prod->tag:prod:*": {"src": "tag:prod", "dst": "tag:prod:*", "rule_type": "ACL", "rule_index": 9, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "tag:webserver->tag:database:*": {"src": "tag:webserver", "dst": "tag:database:*", "rule_type": "ACL", "rule_index": 10, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "group:sre->tag:database:*": {"src": "group:sre", "dst": "tag:database:*", "rule_type": "ACL", "rule_index": 12, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "tag:webserver->web-server:443": {"src": "tag:webserver", "dst": "web-server:443", "rule_type": "ACL", "rule_index": 11, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "group:sre->uat1:22": {"src": "group:sre", "dst": "uat1:22", "rule_type": "ACL", "rule_index": 12, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "group:sre->production-backend:*": {"src": "group:sre", "dst": "production-backend:*", "rule_type": "ACL", "rule_index": 12, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "group:sre->tag:webserver": {"src": "group:sre", "dst": "tag:webserver", "rule_type": "ACL", "rule_index": 12, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "group:sre->web-server:443": {"src": "group:sre", "dst": "web-server:443", "rule_type": "ACL", "rule_index": 12, "action": "accept", "protocols": [], "via": [], "posture": [], "apps": []}, "*->*": {"src": "*", "dst": "*", "rule_type": "Grant", "rule_index": 1, "protocols": ["*"], "via": [], "posture": [], "apps": []}, "autogroup:member->autogroup:self": {"src": "autogroup:member", "dst": "autogroup:self", "rule_type": "Grant", "rule_index": 2, "protocols": ["*"], "via": [], "posture": [], "apps": []}, "autogroup:member->autogroup:internet": {"src": "autogroup:member", "dst": "autogroup:internet", "rule_type": "Grant", "rule_index": 3, "protocols": ["*"], "via": [], "posture": [], "apps": []}, "tag:frontend->tag:backend [tcp:8080,443]": {"src": "tag:frontend", "dst": "tag:backend [tcp:8080,443]", "rule_type": "Grant", "rule_index": 4, "protocols": ["tcp:8080", "tcp:443"], "via": [], "posture": [], "apps": []}, "tag:backend->tag:logging [tcp:514, udp:514]": {"src": "tag:backend", "dst": "tag:logging [tcp:514, udp:514]", "rule_type": "Grant", "rule_index": 5, "protocols": ["tcp:514", "udp:514"], "via": [], "posture": [], "apps": []}, "group:eng->tag:internal-tools": {"src": "group:eng", "dst": "tag:internal-tools", "rule_type": "Grant", "rule_index": 6, "protocols": ["*"], "via": [], "posture": [], "apps": []}, "group:sales->tag:internal-tools [tcp:443,22]": {"src": "group:sales", "dst": "tag:internal-tools [tcp:443,22]", "rule_type": "Grant", "rule_index": 7, "protocols": ["tcp:443", "tcp:22"], "via": [], "posture": [], "apps": []}, "group:nyc->autogroup:internet": {"src": "group:nyc", "dst": "autogroup:internet", "rule_type": "Grant", "rule_index": 8, "protocols": ["*"], "via": ["tag:exit-node-nyc"], "posture": [], "apps": []}, "group:mobile->tag:production [tcp:443]": {"src": "group:mobile", "dst": "tag:production [tcp:443]", "rule_type": "Grant", "rule_index": 9, "protocols": ["tcp:443"], "via": [], "posture": ["posture:latestMac"], "apps": []}, "tag:frontend->tag:backend [tcp:8080,9090]": {"src": "tag:frontend", "dst": "tag:backend [tcp:8080,9090]", "rule_type": "Grant", "rule_index": 10, "protocols": ["tcp:8080", "tcp:9090"], "via": [], "posture": [], "apps": ["webapp-connector"]}, "group:admin->tag:production": {"src": "group:admin", "dst": "tag:production", "rule_type": "Grant", "rule_index": 11, "protocols": ["*"], "via": [], "posture": ["posture:complianceDevice"], "apps": []}, "group:contractors->tag:staging [tcp:22,80]": {"src": "group:contractors", "dst": "tag:staging [tcp:22,80]", "rule_type": "Grant", "rule_index": 12, "protocols": ["tcp:22", "tcp:80"], "via": ["internal-tool"], "posture": [], "apps": []}, "group:eng->database [tcp:5432,3306]": {"src": "group:eng", "dst": "database [tcp:5432,3306]", "rule_type": "Grant", "rule_index": 13, "protocols": ["tcp:5432", "tcp:3306"], "via": ["api-gateway"], "posture": ["posture:complianceDevice"], "apps": []}, "tag:backend->tag:backend [tcp:15000-15010,9080]": {"src": "tag:backend", "dst": "tag:backend [tcp:15000-15010,9080]", "rule_type": "Grant", "rule_index": 14, "protocols": ["tcp:15000-15010", "tcp:9080"], "via": [], "posture": [], "apps": ["service-mesh"]}, "tag:logging->tag:frontend [udp:161, tcp:9100,8080]": {"src": "tag:logging", "dst": "tag:frontend [udp:161, tcp:9100,8080]", "rule_type": "Grant", "rule_index": 15, "protocols": ["udp:161", "tcp:9100", "tcp:8080"], "via": [], "posture": [], "apps": []}, "tag:logging->tag:backend [udp:161, tcp:9100,8080]": {"src": "tag:logging", "dst": "tag:backend [udp:161, tcp:9100,8080]", "rule_type": "Grant", "rule_index": 15, "protocols": ["udp:161", "tcp:9100", "tcp:8080"], "via": [], "posture": [], "apps": []}, "group:admin->* [tcp:22]": {"src": "group:admin", "dst": "* [tcp:22]", "rule_type": "Grant", "rule_index": 16, "protocols": ["tcp:22"], "via": [], "posture": [], "apps": []}, "tag:staging->tag:production [tcp:443,8443]": {"src": "tag:staging", "dst": "tag:production [tcp:443,8443]", "rule_type": "Grant", "rule_index": 17, "protocols": ["tcp:443", "tcp:8443"], "via": ["api-gateway"], "posture": ["posture:complianceDevice"], "apps": ["deployment-pipeline"]}, "group:dev->tag:dev": {"src": "group:dev", "dst": "tag:dev", "rule_type": "Grant", "rule_index": 18, "protocols": ["*"], "via": [], "posture": [], "apps": []}, "group:devops->tag:ci": {"src": "group:devops", "dst": "tag:ci", "rule_type": "Grant", "rule_index": 19, "protocols": ["*"], "via": [], "posture": [], "apps": []}, "group:devops->tag:prod": {"src": "group:devops", "dst": "tag:prod", "rule_type": "Grant", "rule_index": 19, "protocols": ["*"], "via": [], "posture": [], "apps": []}}};
+
+// Enhanced search functionality
+let searchActive = false;
+let originalNodeColors = {};
+let savedViewState = null; // Store zoom/pan state before search
+
+function initializeSearch() {
+    // Store original node colors
+    const allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+        originalNodeColors[nodeId] = allNodes[nodeId].color;
+    }
+}
+
+function saveCurrentViewState() {
+    // Save current zoom and pan state before performing search
+    try {
+        if (typeof network !== 'undefined' && network.getViewPosition && network.getScale) {
+            savedViewState = {
+                position: network.getViewPosition(),
+                scale: network.getScale()
+            };
+        }
+    } catch (e) {
+        console.log('Could not save view state:', e);
+        savedViewState = null;
+    }
+}
+
+function restoreViewState() {
+    // Restore saved zoom and pan state or fit to view
+    try {
+        if (typeof network !== 'undefined') {
+            if (savedViewState && network.moveTo) {
+                // Restore previous view state
+                network.moveTo({
+                    position: savedViewState.position,
+                    scale: savedViewState.scale,
+                    animation: {
+                        duration: 1000,
+                        easingFunction: 'easeInOutQuad'
+                    }
+                });
+            } else if (network.fit) {
+                // Fallback to fit to view
+                network.fit({
+                    animation: {
+                        duration: 1000,
+                        easingFunction: 'easeInOutQuad'
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.log('Could not restore view state:', e);
+    }
+}
+
+// Live search dropdown functionality
+let searchDropdownTimeout;
+let allSearchableNodes = [];
+
+function initializeSearchableNodes() {
+    allSearchableNodes = [];
+    for (let nodeId in searchMetadata.nodes) {
+        const metadata = searchMetadata.nodes[nodeId];
+        allSearchableNodes.push({
+            id: nodeId,
+            metadata: metadata,
+            color: originalNodeColors[nodeId] || '#97C2FC',
+            shape: getNodeShape(metadata)
+        });
+    }
+}
+
+function getNodeShape(metadata) {
+    if (metadata.rule_type === 'Mixed') return '⬢';
+    if (metadata.rule_type === 'Grant') return '▲';
+    return '●';
+}
+
+function handleSearchInput(searchTerm) {
+    if (searchTerm === '') {
+        clearSearch();
+        hideSearchDropdown();
+        showSearchTips();
+    } else {
+        hideSearchTips();
+        updateSearchDropdown(searchTerm);
+    }
+}
+
+function handleSearchKeyup(event, searchTerm) {
+    if (event.key === 'Enter') {
+        performEnhancedSearch(searchTerm);
+        hideSearchDropdown();
+    } else if (searchTerm === '') {
+        clearSearch();
+        hideSearchDropdown();
+        showSearchTips();
+    }
+}
+
+function updateSearchDropdown(searchTerm) {
+    if (!searchTerm || searchTerm.trim() === '') {
+        hideSearchDropdown();
+        return;
+    }
+
+    const term = searchTerm.toLowerCase().trim();
+    const matchingNodes = [];
+
+    // Search through all nodes
+    for (let node of allSearchableNodes) {
+        const metadata = node.metadata;
+        let matches = false;
+        let matchDetails = [];
+
+        // Search in node ID
+        if (node.id.toLowerCase().includes(term)) {
+            matches = true;
+            matchDetails.push('name');
+        }
+
+        // Search in protocols
+        if (metadata.protocols && metadata.protocols.length > 0) {
+            // If searching for "protocol" or "protocols", match any node that has protocols
+            if (term === 'protocol' || term === 'protocols') {
+                matches = true;
+                matchDetails.push('protocol');
+            } else if (metadata.protocols.some(p => p.toLowerCase().includes(term))) {
+                // Otherwise, search within the protocol values
+                matches = true;
+                matchDetails.push('protocol');
+            }
+        }
+
+        // Search in via routing
+        if (metadata.via && metadata.via.length > 0) {
+            // If searching for "via", match any node that has via routing
+            if (term === 'via') {
+                matches = true;
+                matchDetails.push('via');
+            } else if (metadata.via.some(v => v.toLowerCase().includes(term))) {
+                // Otherwise, search within the via route values
+                matches = true;
+                matchDetails.push('via');
+            }
+        }
+
+        // Search in posture checks
+        if (metadata.posture && metadata.posture.length > 0) {
+            // If searching for "posture", match any node that has posture checks
+            if (term === 'posture') {
+                matches = true;
+                matchDetails.push('posture');
+            } else if (metadata.posture.some(p => p.toLowerCase().includes(term))) {
+                // Otherwise, search within the posture values
+                matches = true;
+                matchDetails.push('posture');
+            }
+        }
+
+        // Search in applications
+        if (metadata.apps && metadata.apps.length > 0) {
+            // If searching for "app" or "apps", match any node that has applications
+            if (term === 'app' || term === 'apps') {
+                matches = true;
+                matchDetails.push('app');
+            } else if (metadata.apps.some(a => a.toLowerCase().includes(term))) {
+                // Otherwise, search within the app values
+                matches = true;
+                matchDetails.push('app');
+            }
+        }
+
+        // Search in group members
+        if (metadata.members && metadata.members.some(m => m.toLowerCase().includes(term))) {
+            matches = true;
+            matchDetails.push('member');
+        }
+
+        // Search in rule references
+        if (metadata.src_rules && metadata.src_rules.some(r => r.toLowerCase().includes(term))) {
+            matches = true;
+            matchDetails.push('rule');
+        }
+        if (metadata.dst_rules && metadata.dst_rules.some(r => r.toLowerCase().includes(term))) {
+            matches = true;
+            matchDetails.push('rule');
+        }
+
+        // Search in rule type
+        if (metadata.rule_type && metadata.rule_type.toLowerCase().includes(term)) {
+            matches = true;
+            matchDetails.push('type');
+        }
+
+        if (matches) {
+            matchingNodes.push({
+                ...node,
+                matchDetails: matchDetails
+            });
+        }
+    }
+
+    // Limit results to prevent performance issues
+    const limitedResults = matchingNodes.slice(0, 15);
+    displaySearchDropdown(limitedResults, term);
+}
+
+function displaySearchDropdown(matchingNodes, searchTerm) {
+    const dropdown = document.getElementById('search-dropdown');
+
+    if (matchingNodes.length === 0) {
+        dropdown.innerHTML = '<div class="search-dropdown-item" style="color: #999; cursor: default;">No matching nodes found</div>';
+    } else {
+        dropdown.innerHTML = matchingNodes.map(node => {
+            const details = node.matchDetails.join(', ');
+            return `
+                <div class="search-dropdown-item" onclick="selectSearchResult('${node.id}')">
+                    <div class="node-indicator" style="background-color: ${node.color};"></div>
+                    <div class="node-shape">${node.shape}</div>
+                    <div class="node-info">
+                        <div class="node-name">${node.id}</div>
+                        <div class="node-details">Matches: ${details} | Type: ${node.metadata.rule_type}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    dropdown.style.display = 'block';
+}
+
+function selectSearchResult(nodeId) {
+    // Set the search input to the selected node
+    document.getElementById('enhanced-search-input').value = nodeId;
+
+    // Save view state before search if not already saved
+    if (!searchActive) {
+        saveCurrentViewState();
+    }
+
+    // Perform the search to highlight the node
+    performEnhancedSearch(nodeId);
+
+    // Hide the dropdown
+    hideSearchDropdown();
+
+    // Focus and center on the selected node
+    focusOnNode(nodeId);
+}
+
+function focusOnNode(nodeId) {
+    // Try to focus on the node in the network
+    try {
+        if (typeof network !== 'undefined' && network.focus) {
+            network.focus(nodeId, {
+                scale: 1.5,
+                animation: {
+                    duration: 1000,
+                    easingFunction: 'easeInOutQuad'
+                }
+            });
+        }
+    } catch (e) {
+        console.log('Could not focus on node:', e);
+    }
+}
+
+function showSearchDropdown() {
+    const input = document.getElementById('enhanced-search-input');
+    if (input.value.trim() !== '') {
+        updateSearchDropdown(input.value);
+    }
+}
+
+function hideSearchDropdown() {
+    document.getElementById('search-dropdown').style.display = 'none';
+}
+
+function hideSearchDropdownDelayed() {
+    // Delay hiding to allow clicking on dropdown items
+    searchDropdownTimeout = setTimeout(() => {
+        hideSearchDropdown();
+    }, 200);
+}
+
+function showSearchTips() {
+    document.getElementById('search-help').style.display = 'block';
+}
+
+function hideSearchTips() {
+    document.getElementById('search-help').style.display = 'none';
+}
+
+function performEnhancedSearch(searchTerm) {
+    if (!searchTerm || searchTerm.trim() === '') {
+        clearSearch();
+        return;
+    }
+
+    // Save current view state before performing search
+    if (!searchActive) {
+        saveCurrentViewState();
+    }
+
+    searchActive = true;
+    const term = searchTerm.toLowerCase().trim();
+    const allNodes = nodes.get({ returnType: "Object" });
+    const matchingNodes = [];
+
+
+
+    // Search through node metadata
+    for (let nodeId in searchMetadata.nodes) {
+        const metadata = searchMetadata.nodes[nodeId];
+        let matches = false;
+
+        // Search in node ID
+        if (nodeId.toLowerCase().includes(term)) {
+            matches = true;
+        }
+
+        // Search in protocols
+        if (metadata.protocols && metadata.protocols.length > 0) {
+            // If searching for "protocol" or "protocols", match any node that has protocols
+            if (term === 'protocol' || term === 'protocols') {
+                matches = true;
+            } else if (metadata.protocols.some(p => p.toLowerCase().includes(term))) {
+                // Otherwise, search within the protocol values
+                matches = true;
+            }
+        }
+
+        // Search in via routing
+        if (metadata.via && metadata.via.length > 0) {
+            // If searching for "via", match any node that has via routing
+            if (term === 'via') {
+                matches = true;
+            } else if (metadata.via.some(v => v.toLowerCase().includes(term))) {
+                // Otherwise, search within the via route values
+                matches = true;
+            }
+        }
+
+        // Search in posture checks
+        if (metadata.posture && metadata.posture.length > 0) {
+            // If searching for "posture", match any node that has posture checks
+            if (term === 'posture') {
+                matches = true;
+            } else if (metadata.posture.some(p => p.toLowerCase().includes(term))) {
+                // Otherwise, search within the posture values
+                matches = true;
+            }
+        }
+
+        // Search in apps
+        if (metadata.apps && metadata.apps.length > 0) {
+            // If searching for "app" or "apps", match any node that has applications
+            if (term === 'app' || term === 'apps') {
+                matches = true;
+            } else if (metadata.apps.some(a => a.toLowerCase().includes(term))) {
+                // Otherwise, search within the app values
+                matches = true;
+            }
+        }
+
+        // Search in group members
+        if (metadata.members && metadata.members.some(m => m.toLowerCase().includes(term))) {
+            matches = true;
+        }
+
+        // Search in rule types
+        if (metadata.rule_type && metadata.rule_type.toLowerCase().includes(term)) {
+            matches = true;
+        }
+
+        if (matches) {
+            matchingNodes.push(nodeId);
+        }
+    }
+
+    // Update node appearance
+    for (let nodeId in allNodes) {
+        if (matchingNodes.includes(nodeId)) {
+            // Highlight matching nodes
+            allNodes[nodeId].color = '#ff6b6b'; // Bright red for matches
+            allNodes[nodeId].borderWidth = 4;
+        } else {
+            // Dim non-matching nodes
+            allNodes[nodeId].color = 'rgba(200,200,200,0.3)';
+            allNodes[nodeId].borderWidth = 1;
+        }
+    }
+
+    // Update the visualization
+    const updateArray = Object.values(allNodes);
+    nodes.update(updateArray);
+
+    // Update search results count
+    document.getElementById('search-results-count').textContent =
+        `Found ${matchingNodes.length} matching nodes`;
+}
+
+function clearSearch() {
+    if (!searchActive) return;
+
+    searchActive = false;
+    const allNodes = nodes.get({ returnType: "Object" });
+
+    // Restore original appearance
+    for (let nodeId in allNodes) {
+        allNodes[nodeId].color = originalNodeColors[nodeId];
+        allNodes[nodeId].borderWidth = 2;
+    }
+
+    // Update the visualization
+    const updateArray = Object.values(allNodes);
+    nodes.update(updateArray);
+
+    // Restore zoom and pan state
+    restoreViewState();
+
+    // Clear search results
+    document.getElementById('search-results-count').textContent = '';
+    document.getElementById('enhanced-search-input').value = '';
+
+    // Reset saved view state
+    savedViewState = null;
+}
+
+// Drag functionality for the search container
+let isDragging = false;
+let dragOffset = { x: 0, y: 0 };
+
+function initializeDragFunctionality() {
+    const container = document.getElementById('enhanced-search-container');
+    const dragHandle = document.getElementById('drag-handle');
+
+    if (!container || !dragHandle) return;
+
+    // Mouse down event on drag handle
+    dragHandle.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        container.classList.add('dragging');
+
+        const rect = container.getBoundingClientRect();
+        dragOffset.x = e.clientX - rect.left;
+        dragOffset.y = e.clientY - rect.top;
+
+        // Prevent text selection during drag
+        e.preventDefault();
+        document.body.style.userSelect = 'none';
+    });
+
+    // Mouse move event for dragging
+    document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+
+        e.preventDefault();
+
+        // Calculate new position
+        let newX = e.clientX - dragOffset.x;
+        let newY = e.clientY - dragOffset.y;
+
+        // Get viewport dimensions
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const containerRect = container.getBoundingClientRect();
+
+        // Apply boundary constraints
+        newX = Math.max(0, Math.min(newX, viewportWidth - containerRect.width));
+        newY = Math.max(0, Math.min(newY, viewportHeight - containerRect.height));
+
+        // Update position
+        container.style.left = newX + 'px';
+        container.style.top = newY + 'px';
+        container.style.bottom = 'auto'; // Remove bottom positioning when dragging
+    });
+
+    // Mouse up event to stop dragging
+    document.addEventListener('mouseup', function() {
+        if (isDragging) {
+            isDragging = false;
+            container.classList.remove('dragging');
+            document.body.style.userSelect = '';
+        }
+    });
+
+    // Prevent dragging when clicking on input or buttons
+    const searchInput = document.getElementById('enhanced-search-input');
+    const searchButtons = container.querySelectorAll('.search-btn');
+
+    [searchInput, ...searchButtons].forEach(element => {
+        if (element) {
+            element.addEventListener('mousedown', function(e) {
+                e.stopPropagation();
+            });
+        }
+    });
+}
+
+// Initialize search when the network is ready
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        initializeSearch();
+        initializeSearchableNodes();
+        initializeDragFunctionality();
+    }, 1000); // Wait for network to be fully loaded
+});
+</script>
+
+<style>
+.enhanced-search-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background-color: #ffffff;
+    padding: 15px;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    z-index: 1000;
+    min-width: 300px;
+    max-width: 400px;
+    cursor: move;
+    user-select: none;
+}
+
+.enhanced-search-container.dragging {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transform: scale(1.02);
+    transition: none;
+    opacity: 0.9;
+}
+
+.enhanced-search-container:not(.dragging) {
+    transition: all 0.2s ease;
+}
+
+.enhanced-search-container .drag-handle {
+    cursor: move;
+    padding: 5px;
+    margin: -5px -5px 5px -5px;
+    border-radius: 4px 4px 0 0;
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    font-size: 12px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.search-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.search-btn {
+    padding: 6px 12px;
+    border: 1px solid #007bff;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.search-btn:hover {
+    background-color: #0056b3;
+}
+
+.search-btn.secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.search-btn.secondary:hover {
+    background-color: #545b62;
+}
+
+.search-results {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.search-help {
+    font-size: 11px;
+    color: #888;
+    margin-top: 8px;
+    line-height: 1.3;
+}
+
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.search-dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.search-dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.search-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.search-dropdown-item .node-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 1px solid #999;
+}
+
+.search-dropdown-item .node-shape {
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.search-dropdown-item .node-info {
+    flex: 1;
+}
+
+.search-dropdown-item .node-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.search-dropdown-item .node-details {
+    color: #666;
+    font-size: 11px;
+    margin-top: 2px;
+}
+</style>
+
+<div class="enhanced-search-container" id="enhanced-search-container">
+    <div class="drag-handle" id="drag-handle">Search (Drag to Move)</div>
+
+    <div style="position: relative;">
+        <input type="text"
+               id="enhanced-search-input"
+               class="search-input"
+               placeholder="Type to filter..."
+               onkeyup="handleSearchKeyup(event, this.value)"
+               oninput="handleSearchInput(this.value)"
+               onfocus="showSearchDropdown()"
+               onblur="hideSearchDropdownDelayed()">
+
+        <div id="search-dropdown" class="search-dropdown">
+            <!-- Dropdown items will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="search-controls">
+        <button class="search-btn" onclick="performEnhancedSearch(document.getElementById('enhanced-search-input').value)">
+            Search
+        </button>
+        <button class="search-btn secondary" onclick="clearSearch()">
+            Clear
+        </button>
+    </div>
+
+    <div id="search-results-count" class="search-results"></div>
+
+    <div id="search-help" class="search-help">
+        <strong>Search tips:</strong><br>
+        • Node names: tag:prod, group:admin<br>
+        • Group members: dev1, alice@example.com<br>
+        • Protocols: tcp:443, udp:161<br>
+        • Via routes: exit-node, api-gateway<br>
+        • Posture: compliance, latest<br>
+        • Rule types: ACL, Grant, Mixed
+    </div>
 </div>
+</body>
+</html>
+<!-- Legend Toggle Button -->
+<div id="legend-toggle" style="position: fixed; top: 10px; right: 10px; z-index: 1001; background-color: #4CAF50; color: white; border: none; border-radius: 5px; padding: 10px; cursor: pointer; font-family: Arial, sans-serif; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+    📊 Legend
+</div>
+
+<!-- Sliding Legend Panel -->
+<div id="legend-panel" style="position: fixed; top: 0; right: 0; width: 300px; height: 100vh; background-color: #f5f5f5; border-left: 1px solid #ccc; font-family: Arial, sans-serif; font-size: 12px; z-index: 1000; transform: translateX(0); transition: transform 0.3s ease-in-out; overflow-y: auto; box-shadow: -2px 0 5px rgba(0,0,0,0.1);">
+    <div style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 16px; color: #333;">Legend</h3>
+            <button id="legend-close" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #666; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">×</button>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: bold; color: #333;">Node Types (Colors)</h4>
+            <div style="margin-bottom: 8px;">
+                <div style="background-color: #FFFF00; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border: 1px solid #999; border-radius: 3px;"></div>
+                <span style="vertical-align: top; line-height: 20px;">Groups</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <div style="background-color: #00cc66; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border: 1px solid #999; border-radius: 3px;"></div>
+                <span style="vertical-align: top; line-height: 20px;">Tags</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <div style="background-color: #ff6666; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border: 1px solid #999; border-radius: 3px;"></div>
+                <span style="vertical-align: top; line-height: 20px;">Hosts</span>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: bold; color: #333;">Rule Types (Shapes)</h4>
+            <div style="margin-bottom: 8px;">
+                <span style="font-size: 18px; margin-right: 10px; color: #333;">●</span>
+                <span style="vertical-align: top; line-height: 18px;">ACL rules only</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <span style="font-size: 18px; margin-right: 10px; color: #333;">▲</span>
+                <span style="vertical-align: top; line-height: 18px;">Grant rules only</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <span style="font-size: 18px; margin-right: 10px; color: #333;">⬢</span>
+                <span style="vertical-align: top; line-height: 18px;">Both ACL and Grant rules</span>
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid #ddd; padding-top: 15px; font-size: 11px; color: #666;">
+            <p style="margin: 0 0 8px 0;"><strong>Tip:</strong> Hover over nodes for detailed information including rule references with line numbers.</p>
+            <p style="margin: 0;"><strong>Search:</strong> Use the search box to filter nodes by any metadata.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleButton = document.getElementById('legend-toggle');
+    const legendPanel = document.getElementById('legend-panel');
+    const closeButton = document.getElementById('legend-close');
+
+    let isVisible = true; // Default to visible
+
+    function toggleLegend() {
+        isVisible = !isVisible;
+        if (isVisible) {
+            legendPanel.style.transform = 'translateX(0)';
+            toggleButton.style.display = 'none';
+        } else {
+            legendPanel.style.transform = 'translateX(100%)';
+            toggleButton.style.display = 'block';
+        }
+    }
+
+    // Toggle button click
+    toggleButton.addEventListener('click', function() {
+        toggleLegend();
+    });
+
+    // Close button click
+    closeButton.addEventListener('click', function() {
+        toggleLegend();
+    });
+
+    // Initialize - legend is visible by default
+    legendPanel.style.transform = 'translateX(0)';
+    toggleButton.style.display = 'none';
+});
+</script>

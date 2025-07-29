@@ -149,7 +149,9 @@ class PolicyFileLoader:
                       not stripped_line.startswith('"src') and not stripped_line.startswith('"dst') and
                       not stripped_line.startswith('"ip') and not stripped_line.startswith('"via') and
                       not stripped_line.startswith('"app') and not stripped_line.startswith('"srcPosture') and
-                      not stripped_line.startswith('"dstPosture')):
+                      not stripped_line.startswith('"dstPosture') and
+                      # Don't treat app field content as new sections (e.g., "example.com/webapp-connector": [{}])
+                      not ('.' in stripped_line and '/' in stripped_line and stripped_line.count('"') >= 2)):
                     # New top-level section (not a rule property)
                     in_acls_array = False
                     in_grants_array = False

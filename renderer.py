@@ -87,12 +87,57 @@ const searchMetadata = {json.dumps(search_metadata)};
 // Enhanced search functionality
 let searchActive = false;
 let originalNodeColors = {{}};
+let savedViewState = null; // Store zoom/pan state before search
 
 function initializeSearch() {{
     // Store original node colors
     const allNodes = nodes.get({{ returnType: "Object" }});
     for (let nodeId in allNodes) {{
         originalNodeColors[nodeId] = allNodes[nodeId].color;
+    }}
+}}
+
+function saveCurrentViewState() {{
+    // Save current zoom and pan state before performing search
+    try {{
+        if (typeof network !== 'undefined' && network.getViewPosition && network.getScale) {{
+            savedViewState = {{
+                position: network.getViewPosition(),
+                scale: network.getScale()
+            }};
+        }}
+    }} catch (e) {{
+        console.log('Could not save view state:', e);
+        savedViewState = null;
+    }}
+}}
+
+function restoreViewState() {{
+    // Restore saved zoom and pan state or fit to view
+    try {{
+        if (typeof network !== 'undefined') {{
+            if (savedViewState && network.moveTo) {{
+                // Restore previous view state
+                network.moveTo({{
+                    position: savedViewState.position,
+                    scale: savedViewState.scale,
+                    animation: {{
+                        duration: 1000,
+                        easingFunction: 'easeInOutQuad'
+                    }}
+                }});
+            }} else if (network.fit) {{
+                // Fallback to fit to view
+                network.fit({{
+                    animation: {{
+                        duration: 1000,
+                        easingFunction: 'easeInOutQuad'
+                    }}
+                }});
+            }}
+        }}
+    }} catch (e) {{
+        console.log('Could not restore view state:', e);
     }}
 }}
 
@@ -249,6 +294,11 @@ function selectSearchResult(nodeId) {{
     // Set the search input to the selected node
     document.getElementById('enhanced-search-input').value = nodeId;
 
+    // Save view state before search if not already saved
+    if (!searchActive) {{
+        saveCurrentViewState();
+    }}
+
     // Perform the search to highlight the node
     performEnhancedSearch(nodeId);
 
@@ -306,6 +356,11 @@ function performEnhancedSearch(searchTerm) {{
     if (!searchTerm || searchTerm.trim() === '') {{
         clearSearch();
         return;
+    }}
+
+    // Save current view state before performing search
+    if (!searchActive) {{
+        saveCurrentViewState();
     }}
 
     searchActive = true;
@@ -396,9 +451,15 @@ function clearSearch() {{
     const updateArray = Object.values(allNodes);
     nodes.update(updateArray);
 
+    // Restore zoom and pan state
+    restoreViewState();
+
     // Clear search results
     document.getElementById('search-results-count').textContent = '';
     document.getElementById('enhanced-search-input').value = '';
+
+    // Reset saved view state
+    savedViewState = null;
 }}
 
 // Drag functionality for the search container

@@ -136,6 +136,43 @@ class TestRenderer:
                     # Should be set after render_to_html call
                     assert renderer.output_file == "test_output.html"
 
+    def test_zoom_reset_functionality_in_html(self):
+        """Test that zoom reset functionality is properly integrated into the HTML."""
+        mock_graph = Mock(spec=NetworkGraph)
+        mock_graph.nodes = set()
+        mock_graph.edges = []
+        mock_graph.get_search_metadata.return_value = {"nodes": {}, "edges": {}}
+
+        renderer = Renderer(mock_graph)
+        output_file = "test_zoom_reset.html"
+
+        try:
+            # Render the HTML file
+            renderer.render_to_html(output_file)
+
+            # Read the generated HTML content
+            with open(output_file, 'r') as f:
+                html_content = f.read()
+
+            # Verify zoom reset functionality is included
+            assert 'savedViewState = null' in html_content, "savedViewState variable should be initialized"
+            assert 'saveCurrentViewState()' in html_content, "saveCurrentViewState function should be defined"
+            assert 'restoreViewState()' in html_content, "restoreViewState function should be defined"
+            assert 'network.getViewPosition()' in html_content, "Should use network.getViewPosition() to save state"
+            assert 'network.getScale()' in html_content, "Should use network.getScale() to save zoom level"
+            assert 'network.moveTo(' in html_content, "Should use network.moveTo() to restore position"
+            assert 'network.fit(' in html_content, "Should use network.fit() as fallback"
+            assert 'restoreViewState();' in html_content, "clearSearch should call restoreViewState"
+            assert 'savedViewState = null;' in html_content, "clearSearch should reset savedViewState"
+
+            # Verify the clear button calls clearSearch
+            assert 'onclick="clearSearch()"' in html_content, "Clear button should call clearSearch function"
+
+        finally:
+            # Clean up
+            if os.path.exists(output_file):
+                os.remove(output_file)
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

@@ -25,7 +25,8 @@ Security Features:
 import json
 import hjson
 import logging
-from typing import Any
+import re
+from typing import Any, Dict, List, Tuple
 
 from security_utils import SecureFileHandler
 
@@ -90,3 +91,88 @@ class PolicyFileLoader:
 
         logging.debug(f"Policy file loaded successfully with {len(data)} top-level keys")
         return data
+
+    @staticmethod
+    def extract_rule_line_numbers(filename: str) -> Dict[str, List[int]]:
+        """
+        Extract line numbers for ACL and grant rules from the policy file.
+
+        Args:
+            filename: Path to the policy file
+
+        Returns:
+            Dictionary with 'acls' and 'grants' keys containing lists of line numbers
+
+        Raises:
+            ValueError: If file cannot be accessed or parsed
+        """
+        logging.debug(f"Extracting rule line numbers from: {filename}")
+        try:
+            # Validate file path
+            validated_path = SecureFileHandler.validate_file_path(filename)
+
+            # Read file content securely
+            content = SecureFileHandler.safe_read_file(validated_path)
+            lines = content.split('\n')
+
+            acl_line_numbers = []
+            grant_line_numbers = []
+
+            in_acls_array = False
+            in_grants_array = False
+
+            for line_num, line in enumerate(lines, 1):
+                stripped_line = line.strip()
+
+                # Skip empty lines and comments
+                if not stripped_line or stripped_line.startswith('//') or stripped_line.startswith('#'):
+                    continue
+
+                # Track section boundaries
+                if '"acls"' in stripped_line or "'acls'" in stripped_line:
+                    if '[' in stripped_line:
+                        # Array starts on same line
+                        in_acls_array = True
+                        in_grants_array = False
+                    continue
+                elif '"grants"' in stripped_line or "'grants'" in stripped_line:
+                    if '[' in stripped_line:
+                        # Array starts on same line
+                        in_grants_array = True
+                        in_acls_array = False
+                    continue
+                elif stripped_line == '[' and (in_acls_array or in_grants_array):
+                    # Array starts on next line
+                    continue
+                elif (stripped_line.startswith('"') and ':' in stripped_line and
+                      not stripped_line.startswith('"\t') and not stripped_line.startswith('"action') and
+                      not stripped_line.startswith('"src') and not stripped_line.startswith('"dst') and
+                      not stripped_line.startswith('"ip') and not stripped_line.startswith('"via') and
+                      not stripped_line.startswith('"app') and not stripped_line.startswith('"srcPosture') and
+                      not stripped_line.startswith('"dstPosture')):
+                    # New top-level section (not a rule property)
+                    in_acls_array = False
+                    in_grants_array = False
+                    continue
+                elif stripped_line == ']':
+                    # End of array
+                    in_acls_array = False
+                    in_grants_array = False
+                    continue
+
+                # Look for rule objects (lines that start with '{' and are in an array)
+                if stripped_line == '{':
+                    if in_acls_array:
+                        acl_line_numbers.append(line_num)
+                    elif in_grants_array:
+                        grant_line_numbers.append(line_num)
+
+            logging.debug(f"Found {len(acl_line_numbers)} ACL rules and {len(grant_line_numbers)} grant rules")
+            return {
+                'acls': acl_line_numbers,
+                'grants': grant_line_numbers
+            }
+
+        except Exception as e:
+            logging.error(f"Error extracting rule line numbers: {e}")
+            raise ValueError(f"Error extracting rule line numbers: {e}")

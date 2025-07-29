@@ -93,7 +93,7 @@ class TestHexagonFeature:
         assert len(mixed_nodes) == 1
         node_id, shape, tooltip = mixed_nodes[0]
         assert shape == "hexagon"
-        assert "Referenced in both ACL and Grant rules" in tooltip
+        assert "🔄 Mixed (ACL + Grant Rules)" in tooltip
 
     def test_multiple_mixed_nodes(self):
         """Test multiple nodes appearing in both ACL and grant rules."""
@@ -151,7 +151,7 @@ class TestHexagonFeature:
 
         assert len(mixed_group_nodes) == 1
         node_id, tooltip = mixed_group_nodes[0]
-        assert "Referenced in both ACL and Grant rules" in tooltip
+        assert "🔄 Mixed (ACL + Grant Rules)" in tooltip
 
     def test_no_mixed_nodes_when_separate_rules(self):
         """Test that no hexagon shapes are created when ACL and grant rules don't overlap."""

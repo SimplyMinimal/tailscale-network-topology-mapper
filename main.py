@@ -113,7 +113,7 @@ def main() -> None:
         return
 
     logging.debug("Initializing NetworkGraph via DI container")
-    network_graph = NetworkGraph(policy_parser.hosts, policy_parser.groups)
+    network_graph = NetworkGraph(policy_parser.hosts, policy_parser.groups, policy_parser.rule_line_numbers)
     logging.debug("Building network graph from ACLs and grants")
     network_graph.build_graph(policy_parser.acls, policy_parser.grants)
     logging.debug(f"Network graph built with {len(network_graph.nodes)} nodes and {len(network_graph.edges)} edges")

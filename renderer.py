@@ -96,6 +96,212 @@ function initializeSearch() {{
     }}
 }}
 
+// Live search dropdown functionality
+let searchDropdownTimeout;
+let allSearchableNodes = [];
+
+function initializeSearchableNodes() {{
+    allSearchableNodes = [];
+    for (let nodeId in searchMetadata.nodes) {{
+        const metadata = searchMetadata.nodes[nodeId];
+        allSearchableNodes.push({{
+            id: nodeId,
+            metadata: metadata,
+            color: originalNodeColors[nodeId] || '#97C2FC',
+            shape: getNodeShape(metadata)
+        }});
+    }}
+}}
+
+function getNodeShape(metadata) {{
+    if (metadata.rule_type === 'Mixed') return '⬢';
+    if (metadata.rule_type === 'Grant') return '▲';
+    return '●';
+}}
+
+function handleSearchInput(searchTerm) {{
+    if (searchTerm === '') {{
+        clearSearch();
+        hideSearchDropdown();
+        showSearchTips();
+    }} else {{
+        hideSearchTips();
+        updateSearchDropdown(searchTerm);
+    }}
+}}
+
+function handleSearchKeyup(event, searchTerm) {{
+    if (event.key === 'Enter') {{
+        performEnhancedSearch(searchTerm);
+        hideSearchDropdown();
+    }} else if (searchTerm === '') {{
+        clearSearch();
+        hideSearchDropdown();
+        showSearchTips();
+    }}
+}}
+
+function updateSearchDropdown(searchTerm) {{
+    if (!searchTerm || searchTerm.trim() === '') {{
+        hideSearchDropdown();
+        return;
+    }}
+
+    const term = searchTerm.toLowerCase().trim();
+    const matchingNodes = [];
+
+    // Search through all nodes
+    for (let node of allSearchableNodes) {{
+        const metadata = node.metadata;
+        let matches = false;
+        let matchDetails = [];
+
+        // Search in node ID
+        if (node.id.toLowerCase().includes(term)) {{
+            matches = true;
+            matchDetails.push('name');
+        }}
+
+        // Search in protocols
+        if (metadata.protocols && metadata.protocols.some(p => p.toLowerCase().includes(term))) {{
+            matches = true;
+            matchDetails.push('protocol');
+        }}
+
+        // Search in via routing
+        if (metadata.via && metadata.via.some(v => v.toLowerCase().includes(term))) {{
+            matches = true;
+            matchDetails.push('via');
+        }}
+
+        // Search in posture checks
+        if (metadata.posture && metadata.posture.some(p => p.toLowerCase().includes(term))) {{
+            matches = true;
+            matchDetails.push('posture');
+        }}
+
+        // Search in applications
+        if (metadata.apps && metadata.apps.some(a => a.toLowerCase().includes(term))) {{
+            matches = true;
+            matchDetails.push('app');
+        }}
+
+        // Search in group members
+        if (metadata.members && metadata.members.some(m => m.toLowerCase().includes(term))) {{
+            matches = true;
+            matchDetails.push('member');
+        }}
+
+        // Search in rule references
+        if (metadata.src_rules && metadata.src_rules.some(r => r.toLowerCase().includes(term))) {{
+            matches = true;
+            matchDetails.push('rule');
+        }}
+        if (metadata.dst_rules && metadata.dst_rules.some(r => r.toLowerCase().includes(term))) {{
+            matches = true;
+            matchDetails.push('rule');
+        }}
+
+        // Search in rule type
+        if (metadata.rule_type && metadata.rule_type.toLowerCase().includes(term)) {{
+            matches = true;
+            matchDetails.push('type');
+        }}
+
+        if (matches) {{
+            matchingNodes.push({{
+                ...node,
+                matchDetails: matchDetails
+            }});
+        }}
+    }}
+
+    // Limit results to prevent performance issues
+    const limitedResults = matchingNodes.slice(0, 15);
+    displaySearchDropdown(limitedResults, term);
+}}
+
+function displaySearchDropdown(matchingNodes, searchTerm) {{
+    const dropdown = document.getElementById('search-dropdown');
+
+    if (matchingNodes.length === 0) {{
+        dropdown.innerHTML = '<div class="search-dropdown-item" style="color: #999; cursor: default;">No matching nodes found</div>';
+    }} else {{
+        dropdown.innerHTML = matchingNodes.map(node => {{
+            const details = node.matchDetails.join(', ');
+            return `
+                <div class="search-dropdown-item" onclick="selectSearchResult('${{node.id}}')">
+                    <div class="node-indicator" style="background-color: ${{node.color}};"></div>
+                    <div class="node-shape">${{node.shape}}</div>
+                    <div class="node-info">
+                        <div class="node-name">${{node.id}}</div>
+                        <div class="node-details">Matches: ${{details}} | Type: ${{node.metadata.rule_type}}</div>
+                    </div>
+                </div>
+            `;
+        }}).join('');
+    }}
+
+    dropdown.style.display = 'block';
+}}
+
+function selectSearchResult(nodeId) {{
+    // Set the search input to the selected node
+    document.getElementById('enhanced-search-input').value = nodeId;
+
+    // Perform the search to highlight the node
+    performEnhancedSearch(nodeId);
+
+    // Hide the dropdown
+    hideSearchDropdown();
+
+    // Focus and center on the selected node
+    focusOnNode(nodeId);
+}}
+
+function focusOnNode(nodeId) {{
+    // Try to focus on the node in the network
+    try {{
+        if (typeof network !== 'undefined' && network.focus) {{
+            network.focus(nodeId, {{
+                scale: 1.5,
+                animation: {{
+                    duration: 1000,
+                    easingFunction: 'easeInOutQuad'
+                }}
+            }});
+        }}
+    }} catch (e) {{
+        console.log('Could not focus on node:', e);
+    }}
+}}
+
+function showSearchDropdown() {{
+    const input = document.getElementById('enhanced-search-input');
+    if (input.value.trim() !== '') {{
+        updateSearchDropdown(input.value);
+    }}
+}}
+
+function hideSearchDropdown() {{
+    document.getElementById('search-dropdown').style.display = 'none';
+}}
+
+function hideSearchDropdownDelayed() {{
+    // Delay hiding to allow clicking on dropdown items
+    searchDropdownTimeout = setTimeout(() => {{
+        hideSearchDropdown();
+    }}, 200);
+}}
+
+function showSearchTips() {{
+    document.getElementById('search-help').style.display = 'block';
+}}
+
+function hideSearchTips() {{
+    document.getElementById('search-help').style.display = 'none';
+}}
+
 function performEnhancedSearch(searchTerm) {{
     if (!searchTerm || searchTerm.trim() === '') {{
         clearSearch();
@@ -270,6 +476,7 @@ function initializeDragFunctionality() {{
 document.addEventListener('DOMContentLoaded', function() {{
     setTimeout(function() {{
         initializeSearch();
+        initializeSearchableNodes();
         initializeDragFunctionality();
     }}, 1000); // Wait for network to be fully loaded
 }});
@@ -372,17 +579,86 @@ document.addEventListener('DOMContentLoaded', function() {{
     margin-top: 8px;
     line-height: 1.3;
 }}
+
+.search-dropdown {{
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}}
+
+.search-dropdown-item {{
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+}}
+
+.search-dropdown-item:hover {{
+    background-color: #f8f9fa;
+}}
+
+.search-dropdown-item:last-child {{
+    border-bottom: none;
+}}
+
+.search-dropdown-item .node-indicator {{
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 1px solid #999;
+}}
+
+.search-dropdown-item .node-shape {{
+    margin-right: 8px;
+    font-size: 14px;
+}}
+
+.search-dropdown-item .node-info {{
+    flex: 1;
+}}
+
+.search-dropdown-item .node-name {{
+    font-weight: bold;
+    color: #333;
+}}
+
+.search-dropdown-item .node-details {{
+    color: #666;
+    font-size: 11px;
+    margin-top: 2px;
+}}
 </style>
 
 <div class="enhanced-search-container" id="enhanced-search-container">
     <div class="drag-handle" id="drag-handle">Search (Drag to Move)</div>
 
-    <input type="text"
-           id="enhanced-search-input"
-           class="search-input"
-           placeholder="Search nodes, protocols, via routes, posture..."
-           onkeyup="if(event.key==='Enter') performEnhancedSearch(this.value); else if(this.value==='') clearSearch();"
-           oninput="if(this.value==='') clearSearch();">
+    <div style="position: relative;">
+        <input type="text"
+               id="enhanced-search-input"
+               class="search-input"
+               placeholder="Type to filter..."
+               onkeyup="handleSearchKeyup(event, this.value)"
+               oninput="handleSearchInput(this.value)"
+               onfocus="showSearchDropdown()"
+               onblur="hideSearchDropdownDelayed()">
+
+        <div id="search-dropdown" class="search-dropdown">
+            <!-- Dropdown items will be populated by JavaScript -->
+        </div>
+    </div>
 
     <div class="search-controls">
         <button class="search-btn" onclick="performEnhancedSearch(document.getElementById('enhanced-search-input').value)">
@@ -395,7 +671,7 @@ document.addEventListener('DOMContentLoaded', function() {{
 
     <div id="search-results-count" class="search-results"></div>
 
-    <div class="search-help">
+    <div id="search-help" class="search-help">
         <strong>Search tips:</strong><br>
         • Node names: tag:prod, group:admin<br>
         • Group members: dev1, alice@example.com<br>
@@ -433,41 +709,92 @@ document.addEventListener('DOMContentLoaded', function() {{
         host_color = NODE_COLORS["host"]
 
         legend_html = """
-<div style="position: absolute; top: 10px; right: 10px; background-color: #f5f5f5; padding: 15px; border: 1px solid #ccc; border-radius: 5px; font-family: Arial, sans-serif; font-size: 12px; max-width: 250px;">
-    <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 14px;">Legend</h3>
+<!-- Legend Toggle Button -->
+<div id="legend-toggle" style="position: fixed; top: 10px; right: 10px; z-index: 1001; background-color: #4CAF50; color: white; border: none; border-radius: 5px; padding: 10px; cursor: pointer; font-family: Arial, sans-serif; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+    📊 Legend
+</div>
 
-    <div style="margin-bottom: 15px;">
-        <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold;">Node Types (Colors)</h4>
-        <div style="margin-bottom: 5px;">
-            <div style="background-color: {group_color}; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border: 1px solid #999;"></div>
-            <span>Groups</span>
+<!-- Sliding Legend Panel -->
+<div id="legend-panel" style="position: fixed; top: 0; right: 0; width: 300px; height: 100vh; background-color: #f5f5f5; border-left: 1px solid #ccc; font-family: Arial, sans-serif; font-size: 12px; z-index: 1000; transform: translateX(0); transition: transform 0.3s ease-in-out; overflow-y: auto; box-shadow: -2px 0 5px rgba(0,0,0,0.1);">
+    <div style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 16px; color: #333;">Legend</h3>
+            <button id="legend-close" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #666; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">×</button>
         </div>
-        <div style="margin-bottom: 5px;">
-            <div style="background-color: {tag_color}; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border: 1px solid #999;"></div>
-            <span>Tags</span>
-        </div>
-        <div style="margin-bottom: 5px;">
-            <div style="background-color: {host_color}; width: 20px; height: 20px; display: inline-block; margin-right: 8px; border: 1px solid #999;"></div>
-            <span>Hosts</span>
-        </div>
-    </div>
 
-    <div>
-        <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold;">Rule Types (Shapes)</h4>
-        <div style="margin-bottom: 5px;">
-            <span style="font-size: 16px; margin-right: 8px;">●</span>
-            <span>ACL rules only</span>
+        <div style="margin-bottom: 20px;">
+            <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: bold; color: #333;">Node Types (Colors)</h4>
+            <div style="margin-bottom: 8px;">
+                <div style="background-color: {group_color}; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border: 1px solid #999; border-radius: 3px;"></div>
+                <span style="vertical-align: top; line-height: 20px;">Groups</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <div style="background-color: {tag_color}; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border: 1px solid #999; border-radius: 3px;"></div>
+                <span style="vertical-align: top; line-height: 20px;">Tags</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <div style="background-color: {host_color}; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border: 1px solid #999; border-radius: 3px;"></div>
+                <span style="vertical-align: top; line-height: 20px;">Hosts</span>
+            </div>
         </div>
-        <div style="margin-bottom: 5px;">
-            <span style="font-size: 16px; margin-right: 8px;">▲</span>
-            <span>Grant rules only</span>
+
+        <div style="margin-bottom: 20px;">
+            <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: bold; color: #333;">Rule Types (Shapes)</h4>
+            <div style="margin-bottom: 8px;">
+                <span style="font-size: 18px; margin-right: 10px; color: #333;">●</span>
+                <span style="vertical-align: top; line-height: 18px;">ACL rules only</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <span style="font-size: 18px; margin-right: 10px; color: #333;">▲</span>
+                <span style="vertical-align: top; line-height: 18px;">Grant rules only</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <span style="font-size: 18px; margin-right: 10px; color: #333;">⬢</span>
+                <span style="vertical-align: top; line-height: 18px;">Both ACL and Grant rules</span>
+            </div>
         </div>
-        <div style="margin-bottom: 5px;">
-            <span style="font-size: 16px; margin-right: 8px;">⬢</span>
-            <span>Both ACL and Grant rules</span>
+
+        <div style="border-top: 1px solid #ddd; padding-top: 15px; font-size: 11px; color: #666;">
+            <p style="margin: 0 0 8px 0;"><strong>Tip:</strong> Hover over nodes for detailed information including rule references with line numbers.</p>
+            <p style="margin: 0;"><strong>Search:</strong> Use the search box to filter nodes by any metadata.</p>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {{
+    const toggleButton = document.getElementById('legend-toggle');
+    const legendPanel = document.getElementById('legend-panel');
+    const closeButton = document.getElementById('legend-close');
+
+    let isVisible = true; // Default to visible
+
+    function toggleLegend() {{
+        isVisible = !isVisible;
+        if (isVisible) {{
+            legendPanel.style.transform = 'translateX(0)';
+            toggleButton.style.display = 'none';
+        }} else {{
+            legendPanel.style.transform = 'translateX(100%)';
+            toggleButton.style.display = 'block';
+        }}
+    }}
+
+    // Toggle button click
+    toggleButton.addEventListener('click', function() {{
+        toggleLegend();
+    }});
+
+    // Close button click
+    closeButton.addEventListener('click', function() {{
+        toggleLegend();
+    }});
+
+    // Initialize - legend is visible by default
+    legendPanel.style.transform = 'translateX(0)';
+    toggleButton.style.display = 'none';
+}});
+</script>
 """.format(
             group_color=group_color, tag_color=tag_color, host_color=host_color
         )

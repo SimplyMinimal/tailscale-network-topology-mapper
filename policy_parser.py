@@ -21,7 +21,7 @@ class PolicyParser(PolicyParserInterface):
     def __init__(self, policy_file: str = POLICY_FILE) -> None:
         """
         Initialize the policy parser.
-        
+
         Args:
             policy_file: Path to the policy file to parse (defaults to config.POLICY_FILE)
         """
@@ -29,6 +29,7 @@ class PolicyParser(PolicyParserInterface):
         self._policy_data: PolicyData = PolicyData()
         self._file_loader = PolicyFileLoader()
         self._validator = PolicyValidator()
+        self._rule_line_numbers: Dict[str, List[int]] = {'acls': [], 'grants': []}
         logging.debug(f"PolicyParser initialized with policy file: {policy_file}")
 
     @property
@@ -56,6 +57,11 @@ class PolicyParser(PolicyParserInterface):
         """Get parsed grant rules."""
         return self._policy_data.grants
 
+    @property
+    def rule_line_numbers(self) -> Dict[str, List[int]]:
+        """Get line numbers for ACL and grant rules."""
+        return self._rule_line_numbers
+
     def parse_policy(self) -> None:
         """
         Parse the policy file and extract all data.
@@ -67,10 +73,13 @@ class PolicyParser(PolicyParserInterface):
         
         # Load the policy file
         raw_data = self._file_loader.load_json_or_hujson(self.policy_file)
-        
+
+        # Extract rule line numbers
+        self._rule_line_numbers = self._file_loader.extract_rule_line_numbers(self.policy_file)
+
         # Validate the policy structure
         self._validator.validate_policy_structure(raw_data)
-        
+
         # Create policy data object
         self._policy_data = PolicyData.from_dict(raw_data)
         

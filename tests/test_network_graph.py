@@ -142,9 +142,58 @@ class TestNetworkGraph:
         """Test grant destination tooltip with app specification."""
         graph = NetworkGraph({}, {})
         grant = {"app": ["webapp-connector"]}
-        
+
         tooltip = graph._get_grant_dst_tooltip("server", grant)
         assert "App: webapp-connector" in tooltip
+
+    def test_get_grant_dst_tooltip_with_dst_posture(self):
+        """Test grant destination tooltip with destination posture checks."""
+        graph = NetworkGraph({}, {})
+        grant = {"dstPosture": ["osVersion:>=10.15", "deviceTrust:trusted"]}
+
+        tooltip = graph._get_grant_dst_tooltip("server", grant)
+        assert "Posture: osVersion:>=10.15, deviceTrust:trusted" in tooltip
+
+    def test_comprehensive_tooltip_with_metadata(self):
+        """Test comprehensive tooltip generation with full metadata."""
+        graph = NetworkGraph({}, {"group:test": ["user@example.com"]})
+
+        # Simulate building a graph to populate metadata
+        acls = [{"action": "accept", "src": ["group:test"], "dst": ["server:22"]}]
+        grants = [{"src": ["group:test"], "dst": ["server"], "ip": ["tcp:443"], "via": ["gateway"], "srcPosture": ["trusted"]}]
+
+        graph.build_graph(acls, grants)
+
+        # Get comprehensive tooltip for the mixed node
+        tooltip = graph._get_comprehensive_tooltip("group:test")
+
+        # Verify comprehensive information is included
+        assert "group:test" in tooltip
+        assert "👥 Group Members: user@example.com" in tooltip
+        assert "🔄 Mixed (ACL + Grant Rules)" in tooltip
+        assert "📋 Rule References:" in tooltip
+        assert "Source: ACL rule 1, Grant rule 1" in tooltip
+        assert "🌐 Protocols: tcp:443" in tooltip
+        assert "🛤️  Via Routes: gateway" in tooltip
+        assert "🔐 Posture Checks: trusted" in tooltip
+
+    def test_line_numbers_in_tooltips(self):
+        """Test that line numbers are included in rule references when available."""
+        # Create mock line numbers
+        line_numbers = {'acls': [10, 25], 'grants': [45, 60]}
+        graph = NetworkGraph({}, {"group:test": ["user@example.com"]}, line_numbers)
+
+        # Simulate building a graph to populate metadata
+        acls = [{"action": "accept", "src": ["group:test"], "dst": ["server:22"]}]
+        grants = [{"src": ["group:test"], "dst": ["server"], "ip": ["tcp:443"]}]
+
+        graph.build_graph(acls, grants)
+
+        # Get comprehensive tooltip for the mixed node
+        tooltip = graph._get_comprehensive_tooltip("group:test")
+
+        # Verify line numbers are included in rule references
+        assert "Source: ACL rule 1 (Ln 10), Grant rule 1 (Ln 45)" in tooltip
     
     def test_build_graph_with_acls(self):
         """Test building graph from ACL rules."""

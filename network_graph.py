@@ -15,16 +15,18 @@ class NetworkGraph(NetworkGraphInterface):
     posture checks, and application-specific access controls.
     """
     
-    def __init__(self, hosts: Dict[str, str], groups: Dict[str, List[str]]) -> None:
+    def __init__(self, hosts: Dict[str, str], groups: Dict[str, List[str]], rule_line_numbers: Dict[str, List[int]] = None) -> None:
         """
         Initialize the network graph builder.
 
         Args:
             hosts: Mapping of host names to IP addresses
             groups: Mapping of group names to member lists
+            rule_line_numbers: Optional mapping of rule types to line numbers
         """
         self.hosts = hosts
         self.groups = groups
+        self.rule_line_numbers = rule_line_numbers or {'acls': [], 'grants': []}
         self.nodes: Set[Tuple[str, str, str, str]] = set()  # (node_id, color, tooltip, shape)
         self.edges: List[Tuple[str, str]] = []  # (source, destination)
         # Store searchable metadata for enhanced search functionality
@@ -82,24 +84,23 @@ class NetworkGraph(NetworkGraphInterface):
         mixed_nodes = acl_nodes.intersection(grant_nodes)
         logging.debug(f"Found {len(mixed_nodes)} nodes referenced in both ACL and Grant rules: {mixed_nodes}")
 
-        # Update shapes and tooltips for mixed nodes (including enhanced versions)
+        # Update shapes for mixed nodes (comprehensive tooltips will handle the mixed indication)
         for node_id in mixed_nodes:
             # Update the base node if it exists
             if node_id in all_nodes:
                 color, tooltip, _ = all_nodes[node_id]
-                # Enhance tooltip to indicate mixed usage
-                enhanced_tooltip = f"{tooltip} (Referenced in both ACL and Grant rules)"
-                all_nodes[node_id] = (color, enhanced_tooltip, "hexagon")
+                all_nodes[node_id] = (color, tooltip, "hexagon")
                 logging.debug(f"Updated node {node_id} to hexagon shape for mixed ACL/Grant usage")
 
             # Also update any enhanced versions of this node (with protocol specifications)
             for enhanced_node_id in list(all_nodes.keys()):
                 if enhanced_node_id.startswith(f"{node_id} [") and enhanced_node_id.endswith("]"):
                     color, tooltip, _ = all_nodes[enhanced_node_id]
-                    # Enhance tooltip to indicate mixed usage
-                    enhanced_tooltip = f"{tooltip} (Referenced in both ACL and Grant rules)"
-                    all_nodes[enhanced_node_id] = (color, enhanced_tooltip, "hexagon")
+                    all_nodes[enhanced_node_id] = (color, tooltip, "hexagon")
                     logging.debug(f"Updated enhanced node {enhanced_node_id} to hexagon shape for mixed ACL/Grant usage")
+
+        # Update all tooltips with comprehensive information now that metadata is complete
+        self._update_comprehensive_tooltips(all_nodes)
 
         # Batch add all nodes and edges
         for node_id, (color, tooltip, shape) in all_nodes.items():
@@ -155,7 +156,12 @@ class NetworkGraph(NetworkGraphInterface):
                         "apps": [],
                         "members": self._get_node_members(src)
                     }
-                self.node_metadata[src]["src_rules"].append(f"ACL rule {i+1}")
+                # Add line number if available
+                line_info = ""
+                if self.rule_line_numbers and i < len(self.rule_line_numbers.get('acls', [])):
+                    line_num = self.rule_line_numbers['acls'][i]
+                    line_info = f" (Ln {line_num})"
+                self.node_metadata[src]["src_rules"].append(f"ACL rule {i+1}{line_info}")
 
             for dst in dst_nodes:
                 if dst not in all_nodes:
@@ -177,7 +183,12 @@ class NetworkGraph(NetworkGraphInterface):
                         "apps": [],
                         "members": self._get_node_members(dst)
                     }
-                self.node_metadata[dst]["dst_rules"].append(f"ACL rule {i+1}")
+                # Add line number if available
+                line_info = ""
+                if self.rule_line_numbers and i < len(self.rule_line_numbers.get('acls', [])):
+                    line_num = self.rule_line_numbers['acls'][i]
+                    line_info = f" (Ln {line_num})"
+                self.node_metadata[dst]["dst_rules"].append(f"ACL rule {i+1}{line_info}")
 
             # Store edge metadata and create edges
             for src in src_nodes:
@@ -265,7 +276,12 @@ class NetworkGraph(NetworkGraphInterface):
                 elif self.node_metadata[src]["rule_type"] == "ACL":
                     self.node_metadata[src]["rule_type"] = "Mixed"
 
-                self.node_metadata[src]["src_rules"].append(f"Grant rule {i+1}")
+                # Add line number if available
+                line_info = ""
+                if self.rule_line_numbers and i < len(self.rule_line_numbers.get('grants', [])):
+                    line_num = self.rule_line_numbers['grants'][i]
+                    line_info = f" (Ln {line_num})"
+                self.node_metadata[src]["src_rules"].append(f"Grant rule {i+1}{line_info}")
                 self.node_metadata[src]["protocols"].extend(protocols)
                 self.node_metadata[src]["via"].extend(via_routes)
                 self.node_metadata[src]["posture"].extend(src_posture)
@@ -296,7 +312,12 @@ class NetworkGraph(NetworkGraphInterface):
                 elif self.node_metadata[base_dst]["rule_type"] == "ACL":
                     self.node_metadata[base_dst]["rule_type"] = "Mixed"
 
-                self.node_metadata[base_dst]["dst_rules"].append(f"Grant rule {i+1}")
+                # Add line number if available
+                line_info = ""
+                if self.rule_line_numbers and i < len(self.rule_line_numbers.get('grants', [])):
+                    line_num = self.rule_line_numbers['grants'][i]
+                    line_info = f" (Ln {line_num})"
+                self.node_metadata[base_dst]["dst_rules"].append(f"Grant rule {i+1}{line_info}")
                 self.node_metadata[base_dst]["protocols"].extend(protocols)
                 self.node_metadata[base_dst]["via"].extend(via_routes)
                 self.node_metadata[base_dst]["posture"].extend(dst_posture)
@@ -354,6 +375,111 @@ class NetworkGraph(NetworkGraphInterface):
         else:
             return []
 
+    def _get_comprehensive_tooltip(self, node: str) -> str:
+        """
+        Generate comprehensive tooltip with all available metadata.
+
+        Args:
+            node: The node identifier
+
+        Returns:
+            Comprehensive tooltip showing all rule information with ACL/Grant differentiation
+        """
+        # Start with basic node information
+        tooltip_lines = []
+
+        # Add basic node information
+        basic_info = self._get_node_tooltip(node)
+        tooltip_lines.append(f"{node}")
+
+        # Add node-specific details (IP, host info, etc.) - but not group members (handled in metadata section)
+        if basic_info != node and not node in self.groups:  # Only add if it's different from the node name and not a group
+            tooltip_lines.append(f"ℹ️  {basic_info}")
+
+
+        # Get comprehensive metadata if available
+        if node in self.node_metadata:
+            metadata = self.node_metadata[node]
+
+            # Add rule type information with appropriate emoji
+            rule_type = metadata.get("rule_type", "Unknown")
+            if rule_type == "ACL":
+                tooltip_lines.append("🔒 Legacy ACL Rules")
+            elif rule_type == "Grant":
+                tooltip_lines.append("🎯 Modern Grant Rules")
+            elif rule_type == "Mixed":
+                tooltip_lines.append("🔄 Mixed (ACL + Grant Rules)")
+
+            # Add rule references with clear categorization
+            src_rules = metadata.get("src_rules", [])
+            dst_rules = metadata.get("dst_rules", [])
+
+            if src_rules or dst_rules:
+                tooltip_lines.append("📋 Rule References:")
+                if src_rules:
+                    tooltip_lines.append(f"  • Source: {', '.join(src_rules)}")
+                if dst_rules:
+                    tooltip_lines.append(f"  • Destination: {', '.join(dst_rules)}")
+
+            # Add protocol information
+            protocols = metadata.get("protocols", [])
+            if protocols:
+                unique_protocols = list(set(protocols))  # Remove duplicates
+                if unique_protocols and unique_protocols != ["*"]:  # Don't show wildcard protocols
+                    tooltip_lines.append(f"🌐 Protocols: {', '.join(unique_protocols)}")
+
+            # Add via routing information
+            via_routes = metadata.get("via", [])
+            if via_routes:
+                unique_via = list(set(via_routes))  # Remove duplicates
+                tooltip_lines.append(f"🛤️  Via Routes: {', '.join(unique_via)}")
+
+            # Add posture check information
+            posture_checks = metadata.get("posture", [])
+            if posture_checks:
+                unique_posture = list(set(posture_checks))  # Remove duplicates
+                tooltip_lines.append(f"🔐 Posture Checks: {', '.join(unique_posture)}")
+
+            # Add application information
+            apps = metadata.get("apps", [])
+            if apps:
+                unique_apps = list(set(apps))  # Remove duplicates
+                tooltip_lines.append(f"📱 Applications: {', '.join(unique_apps)}")
+
+            # Add group member information if available
+            members = metadata.get("members", [])
+            if members:
+                # Limit displayed members to avoid overly long tooltips
+                if len(members) <= 5:
+                    tooltip_lines.append(f"👥 Group Members: {', '.join(members)}")
+                else:
+                    tooltip_lines.append(f"👥 Group Members: {', '.join(members[:3])}, ... (+{len(members)-3} more)")
+
+        # If this is a group but no metadata was available, still show group members
+        elif node in self.groups:
+            group_members = ", ".join(self.groups[node])
+            if len(self.groups[node]) <= 5:
+                tooltip_lines.append(f"👥 Group Members: {group_members}")
+            else:
+                tooltip_lines.append(f"👥 Group Members: {', '.join(self.groups[node][:3])}, ... (+{len(self.groups[node])-3} more)")
+
+        return "\n".join(tooltip_lines)
+
+    def _update_comprehensive_tooltips(self, all_nodes: Dict[str, Tuple[str, str, str]]) -> None:
+        """
+        Update all node tooltips with comprehensive information after metadata collection.
+
+        Args:
+            all_nodes: Dictionary of node_id -> (color, tooltip, shape) to update
+        """
+        for node_id in all_nodes.keys():
+            color, _, shape = all_nodes[node_id]
+            # Generate comprehensive tooltip using collected metadata
+            comprehensive_tooltip = self._get_comprehensive_tooltip(node_id)
+            # Update the node tuple with the new tooltip
+            all_nodes[node_id] = (color, comprehensive_tooltip, shape)
+            logging.debug(f"Updated comprehensive tooltip for node: {node_id}")
+
     def _resolve_grant_destinations(self, grant: Dict[str, Union[str, List[str]]]) -> Set[str]:
         logging.debug(f"Resolving grant destinations for: {grant}")
         dst_nodes = self._resolve_nodes(grant["dst"])
@@ -398,33 +524,71 @@ class NetworkGraph(NetworkGraphInterface):
         return dst_nodes
 
     def _get_grant_src_tooltip(self, node: str, grant: Dict[str, Union[str, List[str]]]) -> str:
+        """
+        Generate comprehensive tooltip for grant source nodes.
+
+        Args:
+            node: The node identifier
+            grant: The grant rule dictionary
+
+        Returns:
+            Comprehensive tooltip with all available metadata, or basic tooltip with grant info if metadata not available
+        """
+        # If metadata is available, use comprehensive tooltip
+        if node in self.node_metadata:
+            return self._get_comprehensive_tooltip(node)
+
+        # Fallback to basic tooltip with grant information (for backward compatibility)
         base_tooltip = self._get_node_tooltip(node)
-        
+
         # Add posture check information if present
         if "srcPosture" in grant:
             posture_info = ", ".join(grant["srcPosture"])
             base_tooltip += f"\nPosture: {posture_info}"
-        
+
         return base_tooltip
 
     def _get_grant_dst_tooltip(self, node: str, grant: Dict[str, Union[str, List[str]]]) -> str:
-        base_tooltip = self._get_node_tooltip(node)
-        
+        """
+        Generate comprehensive tooltip for grant destination nodes.
+
+        Args:
+            node: The node identifier (may include protocol enhancement)
+            grant: The grant rule dictionary
+
+        Returns:
+            Comprehensive tooltip with all available metadata, or basic tooltip with grant info if metadata not available
+        """
+        # Extract base node ID for metadata lookup
+        base_node = node.split(" [")[0] if " [" in node and node.endswith("]") else node
+
+        # If metadata is available, use comprehensive tooltip
+        if base_node in self.node_metadata:
+            return self._get_comprehensive_tooltip(base_node)
+
+        # Fallback to basic tooltip with grant information (for backward compatibility)
+        base_tooltip = self._get_node_tooltip(base_node)
+
         # Add IP protocol information if present
         if "ip" in grant and grant["ip"] != ["*"]:
             ip_info = ", ".join(grant["ip"])
             base_tooltip += f"\nProtocols: {ip_info}"
-        
+
         # Add via routing information if present
         if "via" in grant:
             via_info = ", ".join(grant["via"])
             base_tooltip += f"\nVia: {via_info}"
-        
+
         # Add app information if present
         if "app" in grant:
             app_info = ", ".join(grant["app"]) if isinstance(grant["app"], list) else grant["app"]
             base_tooltip += f"\nApp: {app_info}"
-        
+
+        # Add destination posture check information if present
+        if "dstPosture" in grant:
+            posture_info = ", ".join(grant["dstPosture"])
+            base_tooltip += f"\nPosture: {posture_info}"
+
         return base_tooltip
 
     def get_search_metadata(self) -> Dict[str, Dict[str, Union[str, List[str]]]]:

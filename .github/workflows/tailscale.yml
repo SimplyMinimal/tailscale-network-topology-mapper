@@ -182,7 +182,7 @@ jobs:
         uses: tailscale/gitops-acl-action@v1.3.1
         with:
           # Use OAuth client authentication if available, fallback to API key
-          api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
+          # api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tailnet: ${{ secrets.TS_TAILNET }}
@@ -202,7 +202,7 @@ jobs:
         uses: tailscale/gitops-acl-action@v1.3.1
         with:
           # Use OAuth client authentication if available, fallback to API key
-          api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
+          # api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tailnet: ${{ secrets.TS_TAILNET }}
@@ -216,7 +216,7 @@ jobs:
         uses: tailscale/gitops-acl-action@v1.3.1
         with:
           # Use OAuth client authentication if available, fallback to API key
-          api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
+          # api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tailnet: ${{ secrets.TS_TAILNET }}

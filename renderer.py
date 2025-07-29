@@ -208,27 +208,55 @@ function updateSearchDropdown(searchTerm) {{
         }}
 
         // Search in protocols
-        if (metadata.protocols && metadata.protocols.some(p => p.toLowerCase().includes(term))) {{
-            matches = true;
-            matchDetails.push('protocol');
+        if (metadata.protocols && metadata.protocols.length > 0) {{
+            // If searching for "protocol" or "protocols", match any node that has protocols
+            if (term === 'protocol' || term === 'protocols') {{
+                matches = true;
+                matchDetails.push('protocol');
+            }} else if (metadata.protocols.some(p => p.toLowerCase().includes(term))) {{
+                // Otherwise, search within the protocol values
+                matches = true;
+                matchDetails.push('protocol');
+            }}
         }}
 
         // Search in via routing
-        if (metadata.via && metadata.via.some(v => v.toLowerCase().includes(term))) {{
-            matches = true;
-            matchDetails.push('via');
+        if (metadata.via && metadata.via.length > 0) {{
+            // If searching for "via", match any node that has via routing
+            if (term === 'via') {{
+                matches = true;
+                matchDetails.push('via');
+            }} else if (metadata.via.some(v => v.toLowerCase().includes(term))) {{
+                // Otherwise, search within the via route values
+                matches = true;
+                matchDetails.push('via');
+            }}
         }}
 
         // Search in posture checks
-        if (metadata.posture && metadata.posture.some(p => p.toLowerCase().includes(term))) {{
-            matches = true;
-            matchDetails.push('posture');
+        if (metadata.posture && metadata.posture.length > 0) {{
+            // If searching for "posture", match any node that has posture checks
+            if (term === 'posture') {{
+                matches = true;
+                matchDetails.push('posture');
+            }} else if (metadata.posture.some(p => p.toLowerCase().includes(term))) {{
+                // Otherwise, search within the posture values
+                matches = true;
+                matchDetails.push('posture');
+            }}
         }}
 
         // Search in applications
-        if (metadata.apps && metadata.apps.some(a => a.toLowerCase().includes(term))) {{
-            matches = true;
-            matchDetails.push('app');
+        if (metadata.apps && metadata.apps.length > 0) {{
+            // If searching for "app" or "apps", match any node that has applications
+            if (term === 'app' || term === 'apps') {{
+                matches = true;
+                matchDetails.push('app');
+            }} else if (metadata.apps.some(a => a.toLowerCase().includes(term))) {{
+                // Otherwise, search within the app values
+                matches = true;
+                matchDetails.push('app');
+            }}
         }}
 
         // Search in group members
@@ -368,6 +396,8 @@ function performEnhancedSearch(searchTerm) {{
     const allNodes = nodes.get({{ returnType: "Object" }});
     const matchingNodes = [];
 
+
+
     // Search through node metadata
     for (let nodeId in searchMetadata.nodes) {{
         const metadata = searchMetadata.nodes[nodeId];
@@ -379,23 +409,47 @@ function performEnhancedSearch(searchTerm) {{
         }}
 
         // Search in protocols
-        if (metadata.protocols && metadata.protocols.some(p => p.toLowerCase().includes(term))) {{
-            matches = true;
+        if (metadata.protocols && metadata.protocols.length > 0) {{
+            // If searching for "protocol" or "protocols", match any node that has protocols
+            if (term === 'protocol' || term === 'protocols') {{
+                matches = true;
+            }} else if (metadata.protocols.some(p => p.toLowerCase().includes(term))) {{
+                // Otherwise, search within the protocol values
+                matches = true;
+            }}
         }}
 
         // Search in via routing
-        if (metadata.via && metadata.via.some(v => v.toLowerCase().includes(term))) {{
-            matches = true;
+        if (metadata.via && metadata.via.length > 0) {{
+            // If searching for "via", match any node that has via routing
+            if (term === 'via') {{
+                matches = true;
+            }} else if (metadata.via.some(v => v.toLowerCase().includes(term))) {{
+                // Otherwise, search within the via route values
+                matches = true;
+            }}
         }}
 
         // Search in posture checks
-        if (metadata.posture && metadata.posture.some(p => p.toLowerCase().includes(term))) {{
-            matches = true;
+        if (metadata.posture && metadata.posture.length > 0) {{
+            // If searching for "posture", match any node that has posture checks
+            if (term === 'posture') {{
+                matches = true;
+            }} else if (metadata.posture.some(p => p.toLowerCase().includes(term))) {{
+                // Otherwise, search within the posture values
+                matches = true;
+            }}
         }}
 
         // Search in apps
-        if (metadata.apps && metadata.apps.some(a => a.toLowerCase().includes(term))) {{
-            matches = true;
+        if (metadata.apps && metadata.apps.length > 0) {{
+            // If searching for "app" or "apps", match any node that has applications
+            if (term === 'app' || term === 'apps') {{
+                matches = true;
+            }} else if (metadata.apps.some(a => a.toLowerCase().includes(term))) {{
+                // Otherwise, search within the app values
+                matches = true;
+            }}
         }}
 
         // Search in group members

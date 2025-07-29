@@ -138,7 +138,7 @@ class TestSearchFunctionality(unittest.TestCase):
         for node_id, apps in nodes_with_apps:
             all_apps.extend(apps)
 
-        expected_apps = ['webapp-connector', 'service-mesh', 'deployment-pipeline']
+        expected_apps = ['example.com/webapp-connector', 'example.com/service-mesh', 'example.com/deployment-pipeline']
         for expected_app in expected_apps:
             self.assertIn(expected_app, all_apps,
                          f"Expected application '{expected_app}' not found")

@@ -117,7 +117,9 @@ class MockPolicyData:
                     "dst": ["internal-tool"],
                     "ip": ["tcp:443"],
                     "srcPosture": ["posture:complianceDevice", "posture:latestMac"],
-                    "app": ["webapp-connector"]
+                    "app": {
+                        "example.com/webapp-connector": [{}]
+                    }
                 },
                 {
                     "src": ["group:contractors"],
@@ -130,7 +132,9 @@ class MockPolicyData:
                     "src": ["group:sales"],
                     "dst": ["database"],
                     "ip": ["tcp:5432"],
-                    "app": ["service-mesh"],
+                    "app": {
+                        "example.com/service-mesh": [{}]
+                    },
                     "srcPosture": ["posture:complianceDevice"]
                 },
                 {
@@ -138,7 +142,9 @@ class MockPolicyData:
                     "dst": ["logging-server"],
                     "ip": ["tcp:514", "udp:514"],
                     "via": ["internal-tool"],
-                    "app": ["deployment-pipeline"]
+                    "app": {
+                        "example.com/deployment-pipeline": [{}]
+                    }
                 },
                 {
                     "src": ["group:admin"],
@@ -260,7 +266,11 @@ class MockPolicyData:
                     "src": ["group:app-test"],
                     "dst": ["app-server"],
                     "ip": ["tcp:443"],
-                    "app": ["webapp-connector", "service-mesh", "deployment-pipeline"]
+                    "app": {
+                        "example.com/webapp-connector": [{}],
+                        "example.com/service-mesh": [{}],
+                        "example.com/deployment-pipeline": [{}]
+                    }
                 }
             ]
         }

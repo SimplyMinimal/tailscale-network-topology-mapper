@@ -248,9 +248,18 @@ class NetworkGraph(NetworkGraphInterface):
             via_routes = grant.get("via", [])
             src_posture = grant.get("srcPosture", [])
             dst_posture = grant.get("dstPosture", [])
-            apps = grant.get("app", [])
-            if isinstance(apps, str):
-                apps = [apps]
+            apps = []
+            if "app" in grant:
+                app_field = grant["app"]
+                if isinstance(app_field, dict):
+                    # New object format: {"domain/capability": [{}]}
+                    apps = list(app_field.keys())
+                elif isinstance(app_field, list):
+                    # Legacy array format: ["capability"]
+                    apps = app_field
+                elif isinstance(app_field, str):
+                    # Single string format
+                    apps = [app_field]
 
             # Store searchable metadata for source nodes
             for src in src_nodes:
@@ -581,7 +590,16 @@ class NetworkGraph(NetworkGraphInterface):
 
         # Add app information if present
         if "app" in grant:
-            app_info = ", ".join(grant["app"]) if isinstance(grant["app"], list) else grant["app"]
+            app_field = grant["app"]
+            if isinstance(app_field, dict):
+                # New object format: {"domain/capability": [{}]}
+                app_info = ", ".join(app_field.keys())
+            elif isinstance(app_field, list):
+                # Legacy array format: ["capability"]
+                app_info = ", ".join(app_field)
+            else:
+                # Single string format
+                app_info = str(app_field)
             base_tooltip += f"\nApp: {app_info}"
 
         # Add destination posture check information if present

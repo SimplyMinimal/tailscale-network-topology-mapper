@@ -141,10 +141,10 @@ class TestNetworkGraph:
     def test_get_grant_dst_tooltip_with_app(self):
         """Test grant destination tooltip with app specification."""
         graph = NetworkGraph({}, {})
-        grant = {"app": ["webapp-connector"]}
+        grant = {"app": {"example.com/webapp-connector": [{}]}}
 
         tooltip = graph._get_grant_dst_tooltip("server", grant)
-        assert "App: webapp-connector" in tooltip
+        assert "App: example.com/webapp-connector" in tooltip
 
     def test_get_grant_dst_tooltip_with_dst_posture(self):
         """Test grant destination tooltip with destination posture checks."""

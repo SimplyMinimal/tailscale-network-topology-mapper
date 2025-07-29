@@ -212,7 +212,7 @@ class TestPolicyParserComprehensive:
                     assert isinstance(grant["dstPosture"], list)
             
             for grant in grants_with_apps:
-                assert isinstance(grant["app"], list)
+                assert isinstance(grant["app"], dict)
                 assert len(grant["app"]) > 0
     
     def test_policy_with_mixed_protocols(self):

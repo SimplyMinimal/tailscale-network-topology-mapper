@@ -16,8 +16,8 @@
 		"group:sre": ["sre@example.com"],
 
 		// General Employees
-		"group:all staff": ["all staff@example.com"],
-		"group:dev team": ["dev team@example.com"]
+		"group:all-staff": ["all-staff@example.com"],
+		"group:dev-team": ["dev-team@example.com"]
 	},
 
 	"hosts": {
@@ -73,13 +73,13 @@
 		// Domain Controller can hit all client machines
 		{
 			"action": "accept",
-			"src":    ["group:all staff"],
+			"src":    ["group:all-staff"],
 			"dst":    ["tag:domain-controller:*"],
 		},
 		{
 			"action": "accept",
 			"src":    ["tag:domain-controller"],
-			"dst":    ["group:all staff:*"],
+			"dst":    ["group:all-staff:*"],
 		},
 
 		// allow domain controllers to talk to other domain controllers
@@ -101,7 +101,7 @@
 		// Grant Dev Team and their pipeline access
 		{
 			"action": "accept",
-			"src":    ["group:dev team" , "tag:ci"],
+			"src":    ["group:dev-team" , "tag:ci"],
 			"dst": ["uat1:22"],
 		},
 
@@ -128,7 +128,7 @@
 			"action": "accept",
 			"src": ["group:sre"],
 			"dst": ["tag:database:*",
-					"tag:webserver",
+					"tag:webserver:*",
 					"web-server:443",
 					"production-backend:*",
 					"uat1:22"

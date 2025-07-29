@@ -66,11 +66,12 @@
 	// Device posture definitions
 	"postures": {
 		"posture:latestMac": [
-			"node:os == 'macos' && node:osVersion >= '13.0'"
+			"node:os == 'macos'",
+			"node:osVersion >= '13.0'"
 		],
 		"posture:complianceDevice": [
 			"node:tsVersion >= '1.50.0'",
-			"node:os in ['macos', 'windows', 'linux']"
+			"node:os IN ['macos', 'windows', 'linux']"
 		]
 	},
 
@@ -299,7 +300,7 @@
 			"src": ["autogroup:member"],
 			"dst": ["192.0.2.0/24"],
 			"via": ["tag:exit-node-nyc"],
-			"ip": ["*"],
+			"ip": ["*"]
    		},
 	]
 }

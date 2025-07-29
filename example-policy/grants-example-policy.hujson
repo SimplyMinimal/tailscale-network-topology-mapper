@@ -35,11 +35,12 @@
 	// Define device postures
 	"postures": {
 		"posture:latestMac": [
-			"node:os == 'macOS' && node:osVersion >= '13.0'"
+			"node:os == 'macos'",
+			"node:osVersion >= '13.0'"
 		],
 		"posture:complianceDevice": [
-			"node:tailscaleVersion >= '1.50.0'",
-			"node:os in ['macOS', 'Windows', 'Linux']"
+			"node:tsVersion >= '1.50.0'",
+			"node:os IN ['macos', 'windows', 'linux']"
 		]
 	},
 
@@ -94,7 +95,6 @@
 		{
 			"src": ["group:nyc"],
 			"dst": ["autogroup:internet"],
-			"via": ["tag:exit-node-nyc"],
 			"ip": ["*"]
 		},
 
@@ -110,7 +110,9 @@
 		{
 			"src": ["tag:frontend"],
 			"dst": ["tag:backend"],
-			"app": ["webapp-connector"],
+			"app": {
+				"example.com/webapp-connector": [{}]
+			},
 			"ip": ["tcp:8080", "tcp:9090"]
 		},
 
@@ -126,7 +128,6 @@
 		{
 			"src": ["group:contractors"],
 			"dst": ["tag:staging"],
-			"via": ["internal-tool"],
 			"ip": ["tcp:22", "tcp:80"]
 		},
 
@@ -134,7 +135,6 @@
 		{
 			"src": ["group:eng"],
 			"dst": ["database"],
-			"via": ["api-gateway"],
 			"srcPosture": ["posture:complianceDevice"],
 			"ip": ["tcp:5432", "tcp:3306"]
 		},
@@ -143,7 +143,9 @@
 		{
 			"src": ["tag:backend"],
 			"dst": ["tag:backend"],
-			"app": ["service-mesh"],
+			"app": {
+				"example.com/service-mesh": [{}]
+			},
 			"ip": ["tcp:15000-15010", "tcp:9080"]
 		},
 
@@ -165,9 +167,10 @@
 		{
 			"src": ["tag:staging"],
 			"dst": ["tag:production"],
-			"via": ["api-gateway"],
 			"srcPosture": ["posture:complianceDevice"],
-			"app": ["deployment-pipeline"],
+			"app": {
+				"example.com/deployment-pipeline": [{}]
+			},
 			"ip": ["tcp:443", "tcp:8443"]
 		}
 	]

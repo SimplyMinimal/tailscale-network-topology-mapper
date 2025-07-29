@@ -5,7 +5,7 @@ from typing import List, Tuple
 from pyvis.network import Network
 
 from network_graph import NetworkGraph
-from config import VISUALIZATION_CONFIG, NODE_COLORS
+from config import VISUALIZATION_CONFIG, NODE_COLORS, NETWORK_OPTIONS
 from services import RendererInterface
 
 
@@ -75,6 +75,10 @@ class Renderer(RendererInterface):
 
         Modifies the generated HTML to include better zoom configuration with
         smaller incremental steps for more precise navigation.
+
+        Uses configurable zoom settings from NETWORK_OPTIONS:
+        - zoom.speed: Zoom speed factor (lower = finer control)
+        - zoom.enabled: Enable/disable zoom functionality
         """
         logging.debug("Improving zoom controls in HTML file")
 
@@ -87,6 +91,10 @@ class Renderer(RendererInterface):
         with open(self.output_file, "r") as f:
             content = f.read()
 
+        # Get zoom configuration from NETWORK_OPTIONS
+        zoom_speed = NETWORK_OPTIONS.get("zoom", {}).get("speed", 0.5)
+        zoom_enabled = NETWORK_OPTIONS.get("zoom", {}).get("enabled", True)
+
         # Find the interaction section in the options and add zoom configuration
         old_interaction = '''    "interaction": {
         "dragNodes": true,
@@ -94,13 +102,13 @@ class Renderer(RendererInterface):
         "hideNodesOnDrag": false
     }'''
 
-        new_interaction = '''    "interaction": {
+        new_interaction = f'''    "interaction": {{
         "dragNodes": true,
         "hideEdgesOnDrag": false,
         "hideNodesOnDrag": false,
-        "zoomSpeed": 0.5,
-        "zoomView": true
-    }'''
+        "zoomSpeed": {zoom_speed},
+        "zoomView": {str(zoom_enabled).lower()}
+    }}'''
 
         if old_interaction in content:
             content = content.replace(old_interaction, new_interaction)
@@ -115,7 +123,7 @@ class Renderer(RendererInterface):
         # Verify the change was written
         with open(self.output_file, "r") as f:
             verify_content = f.read()
-            if "zoomSpeed" in verify_content:
+            if "zoomSpeed" in verify_content and str(zoom_enabled).lower() in verify_content:
                 logging.debug("Zoom settings successfully written to file")
             else:
                 logging.warning("Zoom settings not found in written file")

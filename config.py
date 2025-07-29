@@ -189,5 +189,10 @@ NETWORK_OPTIONS: Dict[str, Any] = {
         "hover": True,
         "selectConnectedEdges": True,
         "tooltipDelay": 200
+    },
+    # Zoom configuration options for improved navigation experience
+    "zoom": {
+        "speed": 0.25,      # Zoom speed factor (lower = finer control)
+        "enabled": True   # Enable/disable zoom functionality
     }
 }

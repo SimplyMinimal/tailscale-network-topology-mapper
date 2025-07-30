@@ -131,7 +131,8 @@ class TestRenderer:
         with patch.object(renderer.net, 'write_html'):
             with patch.object(renderer, '_add_enhanced_search'):
                 with patch.object(renderer, '_add_legend'):
-                    renderer.render_to_html("test_output.html")
+                    with patch.object(renderer, '_apply_ui_fixes'):
+                        renderer.render_to_html("test_output.html")
 
                     # Should be set after render_to_html call
                     assert renderer.output_file == "test_output.html"

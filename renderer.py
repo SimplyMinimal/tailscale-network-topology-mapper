@@ -981,10 +981,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectElement = document.getElementById('select-node');
     if (selectElement) {
         // Update the first option to be a proper placeholder
-        const firstOption = selectElement.querySelector('option[value=""]');
+        const firstOption = selectElement.querySelector('option:first-child');
         if (firstOption) {
             firstOption.setAttribute('disabled', 'disabled');
             firstOption.setAttribute('selected', 'selected');
+            firstOption.setAttribute('value', '');
             firstOption.textContent = 'Select a Node by ID';
         }
 
@@ -1008,6 +1009,12 @@ function resetSelection() {
     // Reset TomSelect component to show placeholder
     if (selectNodeTomSelect) {
         selectNodeTomSelect.clear();
+    } else {
+        // Fallback: reset the original select element
+        const selectElement = document.getElementById('select-node');
+        if (selectElement) {
+            selectElement.selectedIndex = 0;
+        }
     }
 }
 </script>
@@ -1015,6 +1022,10 @@ function resetSelection() {
 
         # Insert TomSelect initialization before closing body
         content = content.replace("</body>", f"{tomselect_init}</body>")
+
+        # Fix the dropdown placeholder option to be disabled
+        content = content.replace('<option selected>Select a Node by ID</option>',
+                                '<option value="" disabled selected>Select a Node by ID</option>')
 
         # Update button layout and add legend button
         # Change col-10 to col-8 for dropdown

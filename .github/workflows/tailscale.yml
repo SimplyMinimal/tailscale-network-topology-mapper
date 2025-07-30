@@ -187,7 +187,7 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tailnet: ${{ secrets.TS_TAILNET }}
           action: test
-          policy-file: policy.hujson
+          policy-file: ./policy.hujson
 
       # OAuth client authentication provides better security than API keys:
       # - More granular permissions and scoping
@@ -221,7 +221,7 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tailnet: ${{ secrets.TS_TAILNET }}
           action: test
-          policy-file: policy.hujson
+          policy-file: ./policy.hujson
         continue-on-error: true
 
       - name: "Process ACL operation results"
@@ -335,11 +335,9 @@ jobs:
 
           **Troubleshooting Steps:**
           1. 🔍 **Review the error logs** in the $(if [[ "${PRIMARY_FAILURE}" == "pre-validation" ]]; then echo "pre-validation"; else echo "failed"; fi) step output above
-          2. 🧪 **Test locally** using \`tailscale configure acl test policy.hujson\` to get the same validation
+          2. 🧪 **Test locally** using \`./scripts/validate-policy.sh policy.hujson\` to get the same validation
           3. 📖 **Check documentation** at https://tailscale.com/kb/1018/acls/
           4. 🔑 **Verify credentials** in your repository secrets (if authentication failed)
-          5. 🏷️ **Validate references** ensure all tags/groups exist before use
-          6. 🔄 **Use official validation** - The pre-validation gate uses Tailscale's authoritative validation rules
 
           **Security Recommendation:**
           $(if [[ -z "${{ secrets.TS_OAUTH_CLIENT_ID }}" ]]; then echo "Consider migrating from API keys to OAuth client authentication for better security. See: https://tailscale.com/kb/1215/oauth-clients/"; else echo "✅ Using OAuth client authentication (recommended)"; fi)

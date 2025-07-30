@@ -64,6 +64,9 @@ class Renderer(RendererInterface):
         logging.debug("Improving zoom navigation experience")
         self._improve_zoom_controls()
 
+        logging.debug("Applying UI bug fixes")
+        self._apply_ui_fixes()
+
         logging.debug("Adding legend to HTML file")
         self._add_legend()
 
@@ -208,6 +211,7 @@ function restoreViewState() {{
 // Live search dropdown functionality
 let searchDropdownTimeout;
 let allSearchableNodes = [];
+let selectedDropdownIndex = -1; // Track selected dropdown item for keyboard navigation
 
 function initializeSearchableNodes() {{
     allSearchableNodes = [];
@@ -240,14 +244,76 @@ function handleSearchInput(searchTerm) {{
 }}
 
 function handleSearchKeyup(event, searchTerm) {{
-    if (event.key === 'Enter') {{
-        performEnhancedSearch(searchTerm);
+    const dropdown = document.getElementById('search-dropdown');
+    const dropdownItems = dropdown.querySelectorAll('.search-dropdown-item:not([style*="cursor: default"])');
+
+    if (event.key === 'ArrowDown') {{
+        event.preventDefault();
+        if (dropdownItems.length > 0) {{
+            selectedDropdownIndex = Math.min(selectedDropdownIndex + 1, dropdownItems.length - 1);
+            updateDropdownSelection(dropdownItems);
+        }}
+    }} else if (event.key === 'ArrowUp') {{
+        event.preventDefault();
+        if (dropdownItems.length > 0) {{
+            selectedDropdownIndex = Math.max(selectedDropdownIndex - 1, -1);
+            updateDropdownSelection(dropdownItems);
+        }}
+    }} else if (event.key === 'Enter') {{
+        event.preventDefault();
+        if (selectedDropdownIndex >= 0 && dropdownItems.length > selectedDropdownIndex) {{
+            // Select the highlighted dropdown item
+            const selectedItem = dropdownItems[selectedDropdownIndex];
+            const nodeId = selectedItem.getAttribute('data-node-id');
+            if (nodeId) {{
+                selectSearchResult(nodeId);
+            }}
+        }} else {{
+            // No item selected, perform regular search
+            performEnhancedSearch(searchTerm);
+            hideSearchDropdown();
+        }}
+    }} else if (event.key === 'Escape') {{
         hideSearchDropdown();
+        selectedDropdownIndex = -1;
     }} else if (searchTerm === '') {{
         clearSearch();
         hideSearchDropdown();
         showSearchTips();
+        selectedDropdownIndex = -1;
+    }} else {{
+        // Reset selection when typing
+        selectedDropdownIndex = -1;
     }}
+}}
+
+function updateDropdownSelection(dropdownItems) {{
+    // Remove previous selection highlighting
+    dropdownItems.forEach((item, index) => {{
+        if (index === selectedDropdownIndex) {{
+            item.style.backgroundColor = '#e3f2fd';
+            item.style.borderLeft = '3px solid #007bff';
+
+            // Scroll the selected item into view
+            const dropdown = document.getElementById('search-dropdown');
+            const itemTop = item.offsetTop;
+            const itemBottom = itemTop + item.offsetHeight;
+            const dropdownTop = dropdown.scrollTop;
+            const dropdownBottom = dropdownTop + dropdown.clientHeight;
+
+            // Check if item is above visible area
+            if (itemTop < dropdownTop) {{
+                dropdown.scrollTop = itemTop;
+            }}
+            // Check if item is below visible area
+            else if (itemBottom > dropdownBottom) {{
+                dropdown.scrollTop = itemBottom - dropdown.clientHeight;
+            }}
+        }} else {{
+            item.style.backgroundColor = '';
+            item.style.borderLeft = '';
+        }}
+    }});
 }}
 
 function updateSearchDropdown(searchTerm) {{
@@ -367,7 +433,7 @@ function displaySearchDropdown(matchingNodes, searchTerm) {{
         dropdown.innerHTML = matchingNodes.map(node => {{
             const details = node.matchDetails.join(', ');
             return `
-                <div class="search-dropdown-item" onclick="selectSearchResult('${{node.id}}')">
+                <div class="search-dropdown-item" data-node-id="${{node.id}}" onclick="selectSearchResult('${{node.id}}')">
                     <div class="node-indicator" style="background-color: ${{node.color}};"></div>
                     <div class="node-shape">${{node.shape}}</div>
                     <div class="node-info">
@@ -380,6 +446,7 @@ function displaySearchDropdown(matchingNodes, searchTerm) {{
     }}
 
     dropdown.style.display = 'block';
+    selectedDropdownIndex = -1; // Reset keyboard navigation selection when dropdown content changes
 }}
 
 function selectSearchResult(nodeId) {{
@@ -427,6 +494,7 @@ function showSearchDropdown() {{
 
 function hideSearchDropdown() {{
     document.getElementById('search-dropdown').style.display = 'none';
+    selectedDropdownIndex = -1; // Reset keyboard navigation selection
 }}
 
 function hideSearchDropdownDelayed() {{
@@ -554,6 +622,13 @@ function performEnhancedSearch(searchTerm) {{
 }}
 
 function clearSearch() {{
+    // Always clear the input box and hide dropdown
+    document.getElementById('enhanced-search-input').value = '';
+    document.getElementById('search-results-count').textContent = '';
+    hideSearchDropdown();
+    showSearchTips();
+
+    // Only restore visualization if search was active
     if (!searchActive) return;
 
     searchActive = false;
@@ -571,10 +646,6 @@ function clearSearch() {{
 
     // Restore zoom and pan state
     restoreViewState();
-
-    // Clear search results
-    document.getElementById('search-results-count').textContent = '';
-    document.getElementById('enhanced-search-input').value = '';
 
     // Reset saved view state
     savedViewState = null;
@@ -874,6 +945,102 @@ document.addEventListener('DOMContentLoaded', function() {{
 
         logging.debug("Enhanced search functionality added successfully")
 
+    def _apply_ui_fixes(self) -> None:
+        """
+        Apply UI bug fixes to the generated HTML file.
+
+        This includes:
+        1. TomSelect integration for dropdown functionality
+        2. Reset Selection button improvements
+        3. Button layout changes (col-8/col-2/col-2 grid)
+        4. Legend button integration
+        """
+        logging.debug("Applying UI bug fixes to HTML file")
+
+        with open(self.output_file, "r") as f:
+            content = f.read()
+
+        # Add TomSelect CDN links if not already present
+        if 'tom-select' not in content:
+            tomselect_css = '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/css/tom-select.min.css" integrity="sha512-43fHB3GLgZfz8QXl1RPQ8O66oIgv3po9cJ5erMt1c4QISq9dYb195T3vr5ImnJPXuVroKcGBPXBFKETW8jrPNQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />'
+            tomselect_js = '<script src="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/js/tom-select.complete.js" integrity="sha512-jeF9CfnvzDiw9G9xiksVjxR2lib44Gnovvkv+3CgCG6NXCD4gqlA5nDAVW5WjpA+i+/zKsUWV5xNEbW1X/HH0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>'
+
+            # Insert TomSelect CSS in head
+            content = content.replace('</head>', f'{tomselect_css}\n</head>')
+            # Insert TomSelect JS before closing head
+            content = content.replace('</head>', f'{tomselect_js}\n</head>')
+
+        # Add TomSelect initialization and reset functionality
+        tomselect_init = """
+<script>
+// Global TomSelect instance for reset functionality
+var selectNodeTomSelect;
+
+// Initialize TomSelect when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    const selectElement = document.getElementById('select-node');
+    if (selectElement) {
+        // Update the first option to be a proper placeholder
+        const firstOption = selectElement.querySelector('option[value=""]');
+        if (firstOption) {
+            firstOption.setAttribute('disabled', 'disabled');
+            firstOption.setAttribute('selected', 'selected');
+            firstOption.textContent = 'Select a Node by ID';
+        }
+
+        // Initialize TomSelect
+        selectNodeTomSelect = new TomSelect("#select-node", {
+            create: false,
+            placeholder: "Select a Node by ID",
+            sortField: {
+                field: "text",
+                direction: "asc"
+            }
+        });
+    }
+});
+
+// Enhanced reset function
+function resetSelection() {
+    // Reset visual selection
+    neighbourhoodHighlight({nodes: []});
+
+    // Reset TomSelect component to show placeholder
+    if (selectNodeTomSelect) {
+        selectNodeTomSelect.clear();
+    }
+}
+</script>
+"""
+
+        # Insert TomSelect initialization before closing body
+        content = content.replace("</body>", f"{tomselect_init}</body>")
+
+        # Update button layout and add legend button
+        # Change col-10 to col-8 for dropdown
+        content = content.replace('class="col-10', 'class="col-8')
+
+        # Find and update the Reset Selection button section to add legend button
+        if 'Reset Selection' in content:
+            # Replace the onclick handler for Reset Selection button
+            content = content.replace('onclick="neighbourhoodHighlight({nodes: []});"', 'onclick="resetSelection();"')
+
+            # Add legend button after Reset Selection button
+            legend_button_html = '''
+                        <div class="col-2 pb-2">
+                            <button type="button" class="btn btn-success btn-block" id="legend-toggle-inline" onclick="toggleLegend();">📊 Legend</button>
+                        </div>'''
+
+            # Find the closing div of the Reset Selection button and add legend button after it
+            reset_button_end = content.find('</div>', content.find('Reset Selection'))
+            if reset_button_end != -1:
+                content = content[:reset_button_end + 6] + legend_button_html + content[reset_button_end + 6:]
+
+        with open(self.output_file, "w") as f:
+            f.write(content)
+
+        logging.debug("UI bug fixes applied successfully")
+
     def _add_legend(self) -> None:
         """
         Add a comprehensive legend to the HTML visualization.
@@ -888,13 +1055,8 @@ document.addEventListener('DOMContentLoaded', function() {{
         host_color = NODE_COLORS["host"]
 
         legend_html = """
-<!-- Legend Toggle Button -->
-<div id="legend-toggle" style="position: fixed; top: 10px; right: 10px; z-index: 1001; background-color: #4CAF50; color: white; border: none; border-radius: 5px; padding: 10px; cursor: pointer; font-family: Arial, sans-serif; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-    📊 Legend
-</div>
-
 <!-- Sliding Legend Panel -->
-<div id="legend-panel" style="position: fixed; top: 0; right: 0; width: 300px; height: 100vh; background-color: #f5f5f5; border-left: 1px solid #ccc; font-family: Arial, sans-serif; font-size: 12px; z-index: 1000; transform: translateX(0); transition: transform 0.3s ease-in-out; overflow-y: auto; box-shadow: -2px 0 5px rgba(0,0,0,0.1);">
+<div id="legend-panel" style="position: fixed; top: 90px; right: 0; width: 300px; height: calc(100vh - 90px); background-color: #f5f5f5; border-left: 1px solid #ccc; font-family: Arial, sans-serif; font-size: 12px; z-index: 1000; transform: translateX(0); transition: transform 0.3s ease-in-out; overflow-y: auto; box-shadow: -2px 0 5px rgba(0,0,0,0.1);">
     <div style="padding: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3 style="margin: 0; font-size: 16px; color: #333;">Legend</h3>
@@ -941,28 +1103,23 @@ document.addEventListener('DOMContentLoaded', function() {{
 </div>
 
 <script>
+// Global legend state
+let isLegendVisible = true; // Default to visible
+
+// Global function for legend toggle
+function toggleLegend() {{
+    const legendPanel = document.getElementById('legend-panel');
+    isLegendVisible = !isLegendVisible;
+    if (isLegendVisible) {{
+        legendPanel.style.transform = 'translateX(0)';
+    }} else {{
+        legendPanel.style.transform = 'translateX(100%)';
+    }}
+}}
+
 document.addEventListener('DOMContentLoaded', function() {{
-    const toggleButton = document.getElementById('legend-toggle');
     const legendPanel = document.getElementById('legend-panel');
     const closeButton = document.getElementById('legend-close');
-
-    let isVisible = true; // Default to visible
-
-    function toggleLegend() {{
-        isVisible = !isVisible;
-        if (isVisible) {{
-            legendPanel.style.transform = 'translateX(0)';
-            toggleButton.style.display = 'none';
-        }} else {{
-            legendPanel.style.transform = 'translateX(100%)';
-            toggleButton.style.display = 'block';
-        }}
-    }}
-
-    // Toggle button click
-    toggleButton.addEventListener('click', function() {{
-        toggleLegend();
-    }});
 
     // Close button click
     closeButton.addEventListener('click', function() {{
@@ -971,7 +1128,6 @@ document.addEventListener('DOMContentLoaded', function() {{
 
     // Initialize - legend is visible by default
     legendPanel.style.transform = 'translateX(0)';
-    toggleButton.style.display = 'none';
 }});
 </script>
 """.format(

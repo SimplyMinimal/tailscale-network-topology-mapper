@@ -65,14 +65,24 @@ jobs:
       - name: "Validate required secrets"
         run: |
           if [[ "${{ github.event_name }}" == "push" || "${{ github.event_name }}" == "pull_request" ]]; then
-            if [[ -z "${{ secrets.TS_API_KEY }}" ]]; then
-              echo "ERROR: TS_API_KEY secret is required but not set"
-              exit 1
-            fi
+            # Check for Tailnet (always required)
             if [[ -z "${{ secrets.TS_TAILNET }}" ]]; then
               echo "ERROR: TS_TAILNET secret is required but not set"
               exit 1
             fi
+            
+            # Check for authentication credentials (OAuth preferred, API key fallback)
+            if [[ -n "${{ secrets.TS_OAUTH_CLIENT_ID }}" && -n "${{ secrets.TS_OAUTH_SECRET }}" ]]; then
+              echo "SUCCESS: OAuth client credentials configured (recommended)"
+            elif [[ -n "${{ secrets.TS_API_KEY }}" ]]; then
+              echo "SUCCESS: API key configured (legacy method)"
+              echo "::notice::Consider migrating to OAuth client authentication for better security"
+            else
+              echo "ERROR: Neither OAuth credentials (TS_OAUTH_CLIENT_ID + TS_OAUTH_SECRET) nor API key (TS_API_KEY) are configured"
+              echo "::error::At least one authentication method must be configured"
+              exit 1
+            fi
+            
             echo "SUCCESS: Required secrets are configured"
           fi
 
@@ -182,7 +192,7 @@ jobs:
         uses: tailscale/gitops-acl-action@v1.3.1
         with:
           # Use OAuth client authentication if available, fallback to API key
-          # api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
+          api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tailnet: ${{ secrets.TS_TAILNET }}
@@ -202,7 +212,7 @@ jobs:
         uses: tailscale/gitops-acl-action@v1.3.1
         with:
           # Use OAuth client authentication if available, fallback to API key
-          # api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
+          api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tailnet: ${{ secrets.TS_TAILNET }}
@@ -216,7 +226,7 @@ jobs:
         uses: tailscale/gitops-acl-action@v1.3.1
         with:
           # Use OAuth client authentication if available, fallback to API key
-          # api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
+          api-key: ${{ secrets.TS_OAUTH_CLIENT_ID && '' || secrets.TS_API_KEY }}
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tailnet: ${{ secrets.TS_TAILNET }}

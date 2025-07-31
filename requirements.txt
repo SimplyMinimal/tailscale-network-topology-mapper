@@ -1,2 +1,4 @@
 pyvis>=0.3.2
 hjson>=3.1.0
+pytest
+bs4

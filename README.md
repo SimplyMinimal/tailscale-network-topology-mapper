@@ -1,51 +1,154 @@
 # Tailscale Network Topology Mapper
 ### A visual way to view your ACL and Grant rules for Tailscale
+
 I occasionally find myself just wanting to get a glance of how my ACL rules look without reading through the code. This is also useful for showing how our policies are set up to people who are not devs by trade.
 
-![alt text](./images/Animation.gif)
+![Demo showing the search and filter functionality on the network topology map to narrow down nodes](./images/Demo.gif)
 
-### Initial Set Up
+---
 
-0. You will need Python3 and git installed.
-1. `git clone https://github.com/SimplyMinimal/tailscale-network-topology-mapper`
-2. `cd tailscale-network-topology-mapper`
-3. `pip install -r requirements.txt`
-4. Copy your ACL policy  into the contents of the example `policy.hujson` 
-5. Edit `config.py` and change `COMPANY_DOMAIN="example.com"` to your actual company domain. Alternatively, you can set an environment variable`TS_COMPANY_DOMAIN` containing the company domain.
+## What Is This?
 
-### Execution
+The **Tailscale Network Topology Mapper** is a tool for visualizing your network access rules. It turns your Tailscale ACL and Grant configurations into a self-contained, interactive HTML map—making it easier to understand and share your network layout.
 
-6. Run `python main.py` to generate your network map. It should produce an updated `network_topology.html` file that you can open in your browser.
+## Key Features
 
-### Run as Docker container
+### Network Visualization
+- **Interactive Graph**: Generates a `network_topology.html` file you can open or host anywhere.
+- **Color-Coded Nodes**:
+  - 🟡 Groups
+  - 🟢 Tags
+  - 🔴 Hosts
+- **Shape-Coded Rule Types**:
+  - Circles (●) - ACL-only
+  - Triangles (▲) - Grant-only
+  - Hexagons (⬢) - Nodes in both ACL and Grant rules
 
-If instead you want to run it using Docker, you can do so.
+### Advanced Search & Filtering
+- **Keyword Search**: Find nodes by name, port, protocol, routing, posture checks, or group membership.
+- **Highlighting**: Matching nodes are visually marked and highlighted.
 
-0. You will need docker and make installed.
-1. `make build run`
-2. Access the web server at [http://localhost:8080](http://localhost:8080)
+### Detailed Tooltips
+Hover over nodes to see:
+- Rule references (with line numbers)
+- Protocols (e.g., `tcp:443`, `udp:53`)
+- Via-routing information
+- Posture check requirements
+- App-level access controls
+- Group memberships
 
-You can filter down to specific groups or nodes using the filter bar at the top or by clicking on a node on the graph.
+### Access Relationships
+- **Directional Edges**: Arrows show who can talk to whom.
+- **Legacy + Modern Rule Support**: Handles ACLs and Grant rules simultaneously.
+- **Protocol Display**: Shows IP protocol details for destination nodes.
 
-### Github Action Workflow
+### Interactive UI
+- Movable search box (drag-and-drop)
+- Smooth zoom controls (configurable)
+- Connected node highlighting when selected
 
-If you would like to have the network map be automatically updated whenever you push an update to your ACL file then take a look at this example workflow:
-[.github/workflows/tailscale.yml](https://github.com/SimplyMinimal/tailscale-network-topology-mapper/blob/main/.github/workflows/tailscale.yml)
+## Supported Tailscale Features
 
-## Limitations
+- **Policy Formats**: JSON and HuJSON (Human JSON)
+- **Modern Grant Support**:
+  - IP protocols (`tcp`, `udp`, `icmp`, etc.)
+  - Via-routing
+  - Posture checks
+  - Application-level access controls
+- **Legacy ACL Compatibility**: Full support for traditional ACL rules
 
-* This project is in an early alpha stage.
-* It can only map what is available in the Tailscale 'policy.hujson' policy file. It is not an active scanning tool that will seek out other hosts.
-* It only focuses on the ACL/Grant rules themselves but eventually this may start capturing ALL the available valid Tailscale sections.
+## 🛠️ Setup Instructions
 
-Pull requests welcome! :)
+### Requirements
+- Python 3
+- Git
 
-## Experimental Ideas and TODOs
+### Steps
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/SimplyMinimal/tailscale-network-topology-mapper
+   cd tailscale-network-topology-mapper
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Add your policy:
+   - Replace the contents of `policy.hujson` with your actual Tailscale ACL.
+4. Set your company domain:
+   - Edit `config.py` and change:
+     ```python
+     COMPANY_DOMAIN = "example.com"
+     ```
+   - Or set an environment variable:
+     ```bash
+     export TS_COMPANY_DOMAIN=yourcompany.com
+     ```
 
-* Use `tailscale debug netmap` to build a more in-depth map
-* Allow switching between layers such as port level, host level, user/group level
-* Enhanced searching by keyword
-* Improve overall site design
+### Generate the Map
+```bash
+python3 main.py
+```
 
-### Disclaimer:
-This project is an independent creation and is not affiliated with Tailscale or its partners. It is solely intended as an expansion upon Tailscale's tools.
+```bash
+# or to show every step as it generates the map
+python3 main.py --debug
+```
+This creates (or updates) `network_topology.html`. Open it in any browser.
+
+---
+
+## 🐳 Running with Docker
+
+If you prefer Docker:
+
+### Prerequisites
+- Docker
+- `make`
+
+### Run It
+```bash
+make build run
+```
+
+Then open [http://localhost:8080](http://localhost:8080) in your browser.
+
+> Use the filter bar or click on any node to narrow down the view.
+
+---
+
+## 🔁 Automate with GitHub Actions
+
+Want your map to update automatically when you change your ACL?
+
+Check out this sample workflow:  
+[`.github/workflows/tailscale.yml`](https://github.com/SimplyMinimal/tailscale-network-topology-mapper/blob/main/.github/workflows/tailscale.yml)
+
+---
+
+## ⚠️ Limitations
+
+- Still in **alpha**—expect some rough edges.
+- Only parses what’s in `policy.hujson`. It doesn’t actively discover devices.
+- Currently focused only on ACL and Grant rules (other policy sections may be supported in future versions).
+
+---
+
+## 🧪 Experimental & TODOs
+
+- Integrate `tailscale debug netmap` for deeper insights
+- Add view toggles: ports, hosts, users/groups
+- Improve the visual design and layout
+
+---
+
+## 📢 Disclaimer
+
+This is an independent project and not affiliated with Tailscale.  
+It’s designed as a companion tool to better understand and visualize your Tailscale network policies.
+
+---
+
+### 🙌 Contributions Welcome!
+
+Pull requests, suggestions, and feedback are appreciated!

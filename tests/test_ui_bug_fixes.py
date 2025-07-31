@@ -23,8 +23,8 @@ from unittest.mock import patch, MagicMock
 # Import the classes we need to test
 from renderer import Renderer
 from network_graph import NetworkGraph
-from fixtures.mock_policy_data import MockPolicyData, MockLineNumbers
-from test_utils import TestGraphBuilder
+from tests.fixtures.mock_policy_data import MockPolicyData, MockLineNumbers
+from tests.test_utils import TestGraphBuilder
 
 
 class TestUIBugFixes:

@@ -1,0 +1,56 @@
+{
+  // Test policy with various HuJSON edge cases
+  "groups": {
+    "group:admin": [
+      "alice@example.com", // inline comment
+      "bob@example.com"
+    ],
+    /* Block comment for developers group */
+    "group:developers": [
+      "dev1@example.com",
+      "dev2@example.com", // trailing comma should be handled
+    ]
+  },
+  
+  "hosts": {
+    "server1": "10.0.1.1",
+    "server2": "10.0.1.2", // another trailing comma
+  },
+  
+  "tagOwners": {
+    "tag:prod": ["group:admin"],
+    "tag:dev": ["group:developers"], // final trailing comma
+  },
+  
+  // ACL rules with comments
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["group:admin"],
+      "dst": ["*:*"] // wildcard access for admins
+    },
+    /* Multi-line
+       block comment */
+    {
+      "action": "accept",
+      "src": ["group:developers"],
+      "dst": ["tag:dev:*"],
+      "proto": "tcp"
+    }
+  ],
+  
+  "grants": [
+    {
+      "src": ["group:admin"],
+      "dst": ["tag:prod"],
+      "ip": ["tcp:22", "tcp:443"],
+      // Complex nested structure
+      "app": {
+        "ssh": {
+          "proto": "tcp",
+          "ports": [22]
+        }
+      }
+    }
+  ]
+}

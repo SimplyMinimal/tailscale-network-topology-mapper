@@ -1,0 +1,122 @@
+{
+  // Example Tailscale ACL policy for testing
+  // This demonstrates all major features supported by the Go rewrite
+  
+  "groups": {
+    "group:admin": [
+      "alice@example.com",
+      "bob@example.com"
+    ],
+    "group:developers": [
+      "dev1@example.com",
+      "dev2@example.com",
+      "tag:dev-servers"
+    ],
+    "group:qa": [
+      "qa1@example.com",
+      "qa2@example.com"
+    ]
+  },
+  
+  "hosts": {
+    "production-db": "10.0.1.100",
+    "staging-db": "10.0.2.100",
+    "api-gateway": "10.0.1.50",
+    "monitoring": "10.0.3.10"
+  },
+  
+  "tagOwners": {
+    "tag:prod-servers": ["group:admin"],
+    "tag:dev-servers": ["group:developers"],
+    "tag:qa-servers": ["group:qa"],
+    "tag:monitoring": ["group:admin"],
+    "tag:databases": ["group:admin", "alice@example.com"]
+  },
+  
+  "postures": {
+    "posture:corporate-device": [
+      "node:os == 'windows' || node:os == 'macos'",
+      "node:tsVersion >= '1.50.0'"
+    ],
+    "posture:secure-device": [
+      "node:os != 'android'",
+      "node:clientSupports.hairPinning == true"
+    ]
+  },
+  
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["group:admin"],
+      "dst": ["*:*"]
+    },
+    {
+      "action": "accept", 
+      "src": ["group:developers"],
+      "dst": ["tag:dev-servers:*", "staging-db:5432"]
+    },
+    {
+      "action": "accept",
+      "src": ["group:qa"],
+      "dst": ["tag:qa-servers:*", "staging-db:5432"]
+    },
+    {
+      "action": "accept",
+      "src": ["tag:monitoring"],
+      "dst": ["*:9090", "*:3000", "*:8080"],
+      "proto": "tcp"
+    }
+  ],
+  
+  "grants": [
+    {
+      "src": ["group:developers"],
+      "dst": ["tag:dev-servers"],
+      "ip": ["tcp:22", "tcp:80", "tcp:443", "tcp:8000-8999"],
+      "srcPosture": ["posture:corporate-device"]
+    },
+    {
+      "src": ["group:qa"],
+      "dst": ["tag:qa-servers"],
+      "ip": ["tcp:22", "tcp:80", "tcp:443"],
+      "srcPosture": ["posture:corporate-device"]
+    },
+    {
+      "src": ["tag:prod-servers"],
+      "dst": ["production-db"],
+      "ip": ["tcp:5432"],
+      "via": ["api-gateway"]
+    },
+    {
+      "src": ["autogroup:internet"],
+      "dst": ["api-gateway"],
+      "ip": ["tcp:443", "tcp:80"]
+    },
+    {
+      "src": ["tag:monitoring"],
+      "dst": ["*"],
+      "ip": ["tcp:9090", "udp:161"],
+      "app": {
+        "prometheus": {
+          "proto": "tcp",
+          "ports": [9090]
+        },
+        "snmp": {
+          "proto": "udp", 
+          "ports": [161]
+        }
+      }
+    },
+    {
+      "src": ["group:admin"],
+      "dst": ["tag:databases"],
+      "ip": ["tcp:5432", "tcp:3306", "tcp:27017"],
+      "dstPosture": ["posture:secure-device"]
+    }
+  ],
+  
+  "autogroups": {
+    "autogroup:internet": ["*"],
+    "autogroup:self": ["*"]
+  }
+}

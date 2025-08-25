@@ -2,3 +2,5 @@ go-example/
 __pycache__/
 .vscode/
 *.cpython*
+.DS_Store
+go-rewrite/tailscale-mapper

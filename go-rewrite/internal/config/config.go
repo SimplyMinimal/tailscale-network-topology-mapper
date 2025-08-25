@@ -11,22 +11,22 @@ import (
 type Config struct {
 	// Company domain for email validation
 	CompanyDomain string `mapstructure:"company_domain"`
-	
+
 	// Policy file path
 	PolicyFile string `mapstructure:"policy_file"`
-	
+
 	// Server configuration
 	Server ServerConfig `mapstructure:"server"`
-	
+
 	// Tailscale API configuration
 	Tailscale TailscaleConfig `mapstructure:"tailscale"`
-	
+
 	// Visualization configuration
 	Visualization VisualizationConfig `mapstructure:"visualization"`
-	
+
 	// Node colors
 	NodeColors NodeColorsConfig `mapstructure:"node_colors"`
-	
+
 	// Network options
 	NetworkOptions NetworkOptionsConfig `mapstructure:"network_options"`
 }
@@ -39,21 +39,21 @@ type ServerConfig struct {
 
 // TailscaleConfig holds Tailscale API configuration
 type TailscaleConfig struct {
-	Tailnet         string `mapstructure:"tailnet"`
-	OAuthClientID   string `mapstructure:"oauth_client_id"`
-	OAuthSecret     string `mapstructure:"oauth_secret"`
-	APIKey          string `mapstructure:"api_key"`
+	Tailnet       string `mapstructure:"tailnet"`
+	OAuthClientID string `mapstructure:"oauth_client_id"`
+	OAuthSecret   string `mapstructure:"oauth_secret"`
+	APIKey        string `mapstructure:"api_key"`
 }
 
 // VisualizationConfig holds visualization settings
 type VisualizationConfig struct {
-	Height              string `mapstructure:"height"`
-	Width               string `mapstructure:"width"`
-	Directed            bool   `mapstructure:"directed"`
-	FilterMenu          bool   `mapstructure:"filter_menu"`
-	SelectMenu          bool   `mapstructure:"select_menu"`
-	NeighborhoodHighlight bool `mapstructure:"neighborhood_highlight"`
-	CDNResources        string `mapstructure:"cdn_resources"`
+	Height                string `mapstructure:"height"`
+	Width                 string `mapstructure:"width"`
+	Directed              bool   `mapstructure:"directed"`
+	FilterMenu            bool   `mapstructure:"filter_menu"`
+	SelectMenu            bool   `mapstructure:"select_menu"`
+	NeighborhoodHighlight bool   `mapstructure:"neighborhood_highlight"`
+	CDNResources          string `mapstructure:"cdn_resources"`
 }
 
 // NodeColorsConfig holds color scheme for different node types
@@ -104,14 +104,14 @@ func Load() (*Config, error) {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("./config")
-	
+
 	// Set defaults
 	setDefaults()
-	
+
 	// Read environment variables
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("TS")
-	
+
 	// Try to read config file (optional)
 	if err := viper.ReadInConfig(); err != nil {
 		// Config file not found is OK, we'll use defaults and env vars
@@ -119,39 +119,39 @@ func Load() (*Config, error) {
 			return nil, err
 		}
 	}
-	
+
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
 		return nil, err
 	}
-	
+
 	// Override with environment variables
 	if domain := os.Getenv("TS_COMPANY_DOMAIN"); domain != "" {
 		config.CompanyDomain = domain
 	}
-	
+
 	if tailnet := os.Getenv("TAILSCALE_TAILNET"); tailnet != "" {
 		config.Tailscale.Tailnet = tailnet
 	}
-	
+
 	if clientID := os.Getenv("TAILSCALE_OAUTH_CLIENT_ID"); clientID != "" {
 		config.Tailscale.OAuthClientID = clientID
 	}
-	
+
 	if secret := os.Getenv("TAILSCALE_OAUTH_CLIENT_SECRET"); secret != "" {
 		config.Tailscale.OAuthSecret = secret
 	}
-	
+
 	if apiKey := os.Getenv("TS_API_KEY"); apiKey != "" {
 		config.Tailscale.APIKey = apiKey
 	}
-	
+
 	// Set policy file path if not specified
 	if config.PolicyFile == "" {
 		wd, _ := os.Getwd()
 		config.PolicyFile = filepath.Join(wd, "policy.hujson")
 	}
-	
+
 	return &config, nil
 }
 
@@ -159,11 +159,11 @@ func Load() (*Config, error) {
 func setDefaults() {
 	// Company domain
 	viper.SetDefault("company_domain", "example.com")
-	
+
 	// Server
 	viper.SetDefault("server.host", "0.0.0.0")
 	viper.SetDefault("server.port", 8080)
-	
+
 	// Visualization
 	viper.SetDefault("visualization.height", "800px")
 	viper.SetDefault("visualization.width", "100%")
@@ -172,12 +172,12 @@ func setDefaults() {
 	viper.SetDefault("visualization.select_menu", true)
 	viper.SetDefault("visualization.neighborhood_highlight", true)
 	viper.SetDefault("visualization.cdn_resources", "remote")
-	
+
 	// Node colors
 	viper.SetDefault("node_colors.tag", "#00cc66")
 	viper.SetDefault("node_colors.group", "#FFFF00")
 	viper.SetDefault("node_colors.host", "#ff6666")
-	
+
 	// Network options
 	viper.SetDefault("network_options.physics.enabled", true)
 	viper.SetDefault("network_options.physics.stabilization.iterations", 100)

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 
 	"github.com/tailscale-network-topology-mapper/go-rewrite/internal/config"
@@ -94,7 +93,7 @@ func (t *apiKeyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 // ValidateCredentials validates the API credentials
 func (c *TailscaleAPIClient) ValidateCredentials() error {
 	url := fmt.Sprintf("%s/tailnet/%s/devices", c.baseURL, c.config.Tailnet)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -120,7 +119,7 @@ func (c *TailscaleAPIClient) ValidateCredentials() error {
 // GetDevices retrieves all devices from the Tailscale API
 func (c *TailscaleAPIClient) GetDevices() ([]models.Device, error) {
 	url := fmt.Sprintf("%s/tailnet/%s/devices", c.baseURL, c.config.Tailnet)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -148,7 +147,7 @@ func (c *TailscaleAPIClient) GetDevices() ([]models.Device, error) {
 // GetTailnetInfo retrieves information about the Tailnet
 func (c *TailscaleAPIClient) GetTailnetInfo() (*models.TailnetInfo, error) {
 	url := fmt.Sprintf("%s/tailnet/%s", c.baseURL, c.config.Tailnet)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -178,7 +177,7 @@ func (c *TailscaleAPIClient) GetPostureChecks() ([]models.PostureCheck, error) {
 	// Note: This endpoint may not be available in all Tailscale plans
 	// This is a placeholder implementation
 	url := fmt.Sprintf("%s/tailnet/%s/posture", c.baseURL, c.config.Tailnet)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -307,9 +306,9 @@ func (c *TailscaleAPIClient) GetAPIStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"base_url":      c.baseURL,
-		"tailnet":       c.config.Tailnet,
-		"auth_method":   authMethod,
+		"base_url":          c.baseURL,
+		"tailnet":           c.config.Tailnet,
+		"auth_method":       authMethod,
 		"client_configured": c.httpClient != nil,
 	}
 }

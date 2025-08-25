@@ -2,28 +2,20 @@
 
 A high-performance Go rewrite of the Tailscale Network Topology Mapper that generates interactive HTML visualizations of Tailscale ACL and Grant rules, showing network relationships, security policies, and potential lateral movement paths.
 
-## 🚀 Features
+# Note: This is an experimental branch. It offers much faster performance and is almost feature complete but is still in beta. Use at your own risk.
+
+![Screenshot of the search functionality and visual topology map](images/go-search.png)
+
+## Features
 
 ### Core Functionality
-- **Policy Parsing**: Supports JSON and HuJSON formats with comprehensive validation
+- **Policy Parsing**: Supports JSON and HuJSON formats with validation
 - **Network Graph Generation**: Creates interactive network topology from ACL and Grant rules
 - **Interactive Visualization**: Web-based interface with vis.js for network exploration
 - **Live Topology**: Real-time device data integration via Tailscale API
 - **OAuth Authentication**: Secure API access with OAuth 2.0 client credentials flow
-
-### Enhanced UI Features
-- **Advanced Search**: Drag-and-drop search interface with live dropdown results
-- **Comprehensive Tooltips**: Display all metadata including protocols, via routing, posture checks
-- **Sliding Legend Panels**: Toggle-able legend with smooth CSS transitions
-- **Neighborhood Highlighting**: Click nodes to highlight connections
-- **Zoom Controls**: Interactive zoom and pan with focus capabilities
-
-### Security & Validation
-- **Policy Validation**: Comprehensive validation of ACL and Grant rules
+- **Policy Validation**: Validation of ACL and Grant rules
 - **Official HuJSON Parser**: Uses Tailscale's official HuJSON library for robust parsing
-- **Input Sanitization**: Security-focused input handling
-- **Type Safety**: Strong typing throughout the Go codebase
-- **Error Handling**: Robust error handling and logging
 
 ## 📦 Installation
 
@@ -41,7 +33,7 @@ A high-performance Go rewrite of the Tailscale Network Topology Mapper that gene
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone http://github.com/SimplyMinimal/tailscale-network-topology-mapper
    cd tailscale-network-topology-mapper/go-rewrite
    ```
 
@@ -57,7 +49,7 @@ A high-performance Go rewrite of the Tailscale Network Topology Mapper that gene
 
 4. **Run with a policy file**:
    ```bash
-   ./tailscale-mapper -policy test-policy.hujson
+   ./tailscale-mapper -policy policy.hujson
    ```
 
 ### Docker Installation (Optional)
@@ -244,9 +236,7 @@ When configured with Tailscale API credentials, the mapper can fetch real-time d
 
 ### OAuth Setup
 1. Create OAuth application in Tailscale admin console
-2. Set redirect URI to `http://localhost:8080/callback`
-3. Configure client ID and secret in environment variables
-4. Grant appropriate scopes: `devices`, `routes`
+2. Grant appropriate read scopes: `devices`, `routes`
 
 ### Features
 - Real-time device status (online/offline)
@@ -357,7 +347,7 @@ The Go rewrite maintains 100% feature parity with the Python version while addin
 - 🆕 REST API endpoints
 - 🆕 Real-time policy reloading
 - 🆕 Enhanced error handling and validation
-- 🆕 Comprehensive test suite
+- 🆕 Test suite
 - 🆕 Single binary deployment
 
 ### Breaking Changes
@@ -384,8 +374,6 @@ The Go rewrite maintains 100% feature parity with the Python version while addin
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
-
-- Original Python implementation by the Tailscale community
 - vis.js library for network visualization
 - Tailscale team for the excellent API and documentation
 - Go community for excellent tooling and libraries

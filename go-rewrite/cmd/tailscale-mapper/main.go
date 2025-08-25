@@ -1,17 +1,22 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/tailscale-network-topology-mapper/go-rewrite/internal/config"
 	"github.com/tailscale-network-topology-mapper/go-rewrite/internal/graph"
 	"github.com/tailscale-network-topology-mapper/go-rewrite/internal/parser"
 	"github.com/tailscale-network-topology-mapper/go-rewrite/internal/renderer"
+	"github.com/tailscale-network-topology-mapper/go-rewrite/internal/server"
 )
 
 func main() {
@@ -20,6 +25,7 @@ func main() {
 		debug      = flag.Bool("debug", false, "Enable debug logging")
 		policyFile = flag.String("policy", "", "Path to policy file (overrides config)")
 		outputFile = flag.String("output", "network_topology.html", "Output HTML file")
+		serverMode = flag.Bool("server", false, "Run in web server mode")
 	)
 	flag.Parse()
 
@@ -51,6 +57,12 @@ func main() {
 
 	log.Printf("Using policy file: %s", cfg.PolicyFile)
 	log.Printf("Company domain: %s", cfg.CompanyDomain)
+
+	// Check if running in server mode
+	if *serverMode {
+		runServerMode(cfg)
+		return
+	}
 
 	// Parse policy file
 	log.Println("Parsing policy file...")
@@ -150,6 +162,7 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, "  %s -debug                             # Enable debug logging\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "  %s -policy custom.hujson              # Use custom policy file\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "  %s -output topology.html              # Custom output file\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  %s -server                            # Run in web server mode\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "\nEnvironment Variables:\n")
 	fmt.Fprintf(os.Stderr, "  TS_COMPANY_DOMAIN                     # Override company domain\n")
 	fmt.Fprintf(os.Stderr, "  TAILSCALE_TAILNET                     # Tailscale tailnet\n")
@@ -162,4 +175,45 @@ func printUsage() {
 
 func init() {
 	flag.Usage = printUsage
+}
+
+// runServerMode starts the application in web server mode
+func runServerMode(cfg *config.Config) {
+	log.Println("Starting in server mode...")
+
+	// Create and start the server
+	srv, err := server.NewServer(cfg)
+	if err != nil {
+		log.Fatalf("Failed to create server: %v", err)
+	}
+
+	// Set up graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Start server in a goroutine
+	go func() {
+		log.Printf("🌐 Server starting on http://%s:%d", cfg.Server.Host, cfg.Server.Port)
+		log.Printf("📊 API documentation available at http://%s:%d/api/v1/health", cfg.Server.Host, cfg.Server.Port)
+		log.Printf("🎯 Main topology view at http://%s:%d/", cfg.Server.Host, cfg.Server.Port)
+
+		if err := srv.Start(); err != nil {
+			log.Fatalf("Server failed to start: %v", err)
+		}
+	}()
+
+	// Wait for shutdown signal
+	<-sigChan
+	log.Println("Received shutdown signal, gracefully stopping server...")
+
+	// Create a context with timeout for graceful shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Attempt graceful shutdown
+	if err := srv.Stop(ctx); err != nil {
+		log.Printf("Error during server shutdown: %v", err)
+	} else {
+		log.Println("Server stopped gracefully")
+	}
 }

@@ -54,15 +54,15 @@ func TestHTMLRenderer(t *testing.T) {
 
 	// Add test nodes
 	adminNode := models.CreateNode("group:admin", "group:admin", models.NodeTypeGroup, models.RuleTypeACL)
-	adminNode.Tooltip = "<strong>group:admin</strong><br>Type: group<br>Members: alice@example.com, bob@example.com"
+	adminNode.Tooltip = "group:admin\nType: group<br>Members: alice@example.com, bob@example.com"
 	graph.AddNode(adminNode)
 
 	devNode := models.CreateNode("tag:dev", "tag:dev", models.NodeTypeTag, models.RuleTypeGrant)
-	devNode.Tooltip = "<strong>tag:dev</strong><br>Type: tag<br>Owners: group:dev"
+	devNode.Tooltip = "tag:dev\nType: tag<br>Owners: group:dev"
 	graph.AddNode(devNode)
 
 	serverNode := models.CreateNode("server1", "server1", models.NodeTypeHost, models.RuleTypeMixed)
-	serverNode.Tooltip = "<strong>server1</strong><br>Type: host<br>IP: 10.0.1.100"
+	serverNode.Tooltip = "server1\nType: host<br>IP: 10.0.1.100"
 	graph.AddNode(serverNode)
 
 	// Add test edges

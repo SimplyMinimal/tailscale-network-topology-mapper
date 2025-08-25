@@ -1,0 +1,64 @@
+{
+  "groups": {
+    "group:system_admin": ["admin@example.com", "sysadmin@example.com"],
+    "group:developers": ["dev1@example.com", "dev2@example.com"],
+    "group:production": ["tag:production-server", "tag:database"]
+  },
+  
+  "hosts": {
+    "api-gateway": "100.64.0.10",
+    "database-server": "100.64.0.20"
+  },
+  
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["autogroup:member"],
+      "dst": ["tag:public:*"]
+    },
+    {
+      "action": "accept",
+      "src": ["group:system_admin"],
+      "dst": ["*:*"]
+    },
+    {
+      "action": "accept",
+      "src": ["autogroup:tagged"],
+      "dst": ["tag:production:443", "tag:database:5432"]
+    },
+    {
+      "action": "accept",
+      "src": ["tag:web-server"],
+      "dst": ["autogroup:internet:443,80"]
+    },
+    {
+      "action": "accept",
+      "src": ["*"],
+      "dst": ["tag:public:80,443"]
+    }
+  ],
+  
+  "grants": [
+    {
+      "src": ["group:developers"],
+      "dst": ["tag:development:*"],
+      "app": {
+        "tailscale.com/cap/funnel": [{
+          "ports": [80, 443]
+        }]
+      }
+    },
+    {
+      "src": ["autogroup:member"],
+      "dst": ["tag:shared-resources:*"]
+    }
+  ],
+  
+  "tests": [
+    {
+      "src": "admin@example.com",
+      "accept": ["tag:production:443"],
+      "deny": ["tag:development:*"]
+    }
+  ]
+}

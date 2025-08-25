@@ -17,7 +17,7 @@ A high-performance Go rewrite of the Tailscale Network Topology Mapper that gene
 - **Policy Validation**: Validation of ACL and Grant rules
 - **Official HuJSON Parser**: Uses Tailscale's official HuJSON library for robust parsing
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 - Go 1.21 or later
@@ -111,7 +111,7 @@ network_options:
     tooltip_delay: 200
 ```
 
-## 🎯 Usage
+## Usage
 
 ### Command Line Interface
 
@@ -156,7 +156,7 @@ When running in server mode, the following endpoints are available:
 - `POST /admin/reload` - Reload policy data
 - `POST /admin/generate` - Generate new HTML file
 
-## 📊 Policy File Format
+## Policy File Format
 
 The mapper supports both JSON and HuJSON (JSON with comments) formats:
 
@@ -278,11 +278,6 @@ go test ./internal/renderer
 - **~3x faster** HTML rendering with template compilation
 - **Instant startup** vs Python's import overhead
 
-### Memory
-- **~50% lower** memory usage due to Go's efficient memory management
-- **No garbage collection pauses** during processing
-- **Smaller binary size** (~15MB vs ~100MB+ Python environment)
-
 ### Concurrency
 - **Native concurrency** for API calls and processing
 - **Parallel graph building** for large policies
@@ -328,7 +323,7 @@ GOOS=linux GOARCH=amd64 go build -o tailscale-mapper-linux cmd/tailscale-mapper/
 GOOS=windows GOARCH=amd64 go build -o tailscale-mapper.exe cmd/tailscale-mapper/main.go
 ```
 
-## 📝 Migration from Python Version
+## Migration from Python Version
 
 The Go rewrite maintains 100% feature parity with the Python version while adding performance improvements:
 
@@ -355,25 +350,11 @@ The Go rewrite maintains 100% feature parity with the Python version while addin
 - Command-line flags use Go conventions (`-flag` instead of `--flag`)
 - API endpoints follow REST conventions
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-- Follow Go conventions and best practices
-- Add tests for new functionality
-- Update documentation for API changes
-- Ensure backward compatibility when possible
-
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 - vis.js library for network visualization
 - Tailscale team for the excellent API and documentation
 - Go community for excellent tooling and libraries

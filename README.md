@@ -1,6 +1,8 @@
 # Tailscale Network Topology Mapper
 ### A visual way to view your ACL and Grant rules for Tailscale
 
+### This branch has changes in `go-rewrite` that are not yet merged into main.
+
 I occasionally find myself just wanting to get a glance of how my ACL rules look without reading through the code. This is also useful for showing how our policies are set up to people who are not devs by trade.
 
 ![Demo showing the search and filter functionality on the network topology map to narrow down nodes](./images/Demo.gif)

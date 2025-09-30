@@ -11,7 +11,7 @@ WORKDIR /app/tailscale-network-topology-mapper
 COPY . /app/tailscale-network-topology-mapper
 RUN pip install -r requirements.txt
 RUN chown -R appuser:appgroup /app
-RUN python create-network-map.py
+RUN python main.py
 
 EXPOSE 8080
 

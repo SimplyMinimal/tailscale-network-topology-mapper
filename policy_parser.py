@@ -1,5 +1,7 @@
 import logging
 from typing import Dict, List, Union
+import subprocess
+import os
 
 from config import POLICY_FILE
 from services import PolicyParserInterface
@@ -65,27 +67,50 @@ class PolicyParser(PolicyParserInterface):
     def parse_policy(self) -> None:
         """
         Parse the policy file and extract all data.
-        
+
         Raises:
             ValueError: If policy file cannot be loaded or is invalid
         """
         logging.debug(f"Starting policy parsing for: {self.policy_file}")
-        
+
+        # Use Tailscale's validation if credentials are available
+        use_tailscale_validation = self._should_use_tailscale_validation()
+        if use_tailscale_validation:
+            self._validate_with_tailscale_api()
+            logging.debug("Using Tailscale validation - skipping local policy structure validation")
+
         # Load the policy file
         raw_data = self._file_loader.load_json_or_hujson(self.policy_file)
 
         # Extract rule line numbers
         self._rule_line_numbers = self._file_loader.extract_rule_line_numbers(self.policy_file)
 
-        # Validate the policy structure
-        self._validator.validate_policy_structure(raw_data)
+        # Validate the policy structure only if not using Tailscale validation
+        if not use_tailscale_validation:
+            logging.debug("Using local policy structure validation")
+            self._validator.validate_policy_structure(raw_data)
 
         # Create policy data object
         self._policy_data = PolicyData.from_dict(raw_data)
-        
+
         # Log statistics
         stats = self._policy_data.get_stats()
         logging.debug(f"Policy parsing completed: {stats}")
-        
+
         logging.info(f"Successfully parsed policy with {stats['groups']} groups, "
                     f"{stats['hosts']} hosts, {stats['acls']} ACLs, {stats['grants']} grants")
+
+    def _should_use_tailscale_validation(self) -> bool:
+        """Check if Tailscale API credentials are available."""
+        return bool(os.environ.get('TAILSCALE_API_KEY') and os.environ.get('TAILSCALE_TAILNET'))
+
+    def _validate_with_tailscale_api(self) -> None:
+        """Validate policy using Tailscale's API."""
+        try:
+            subprocess.run(
+                ['./scripts/validate-policy.sh', self.policy_file],
+                capture_output=True, text=True, check=True
+            )
+            logging.debug("Tailscale API validation passed")
+        except subprocess.CalledProcessError as e:
+            raise ValueError(f"Tailscale API validation failed: {e.stderr}")

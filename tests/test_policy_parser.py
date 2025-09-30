@@ -59,14 +59,83 @@ class TestPolicyParser:
     def test_parse_policy_validation_error(self):
         """Test handling of validation errors."""
         test_data = {"grants": [{"dst": ["target"]}]}  # Missing src
-        
+
         parser = PolicyParser()
         parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
         parser._validator.validate_policy_structure = MagicMock(
             side_effect=ValueError("Grant 1 missing required 'src' field")
         )
-        
+
         with pytest.raises(ValueError, match="Grant 1 missing required 'src' field"):
+            parser.parse_policy()
+
+    @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
+    @patch('subprocess.run')
+    def test_parse_policy_with_tailscale_validation(self, mock_subprocess):
+        """Test that local validation is skipped when Tailscale validation is used."""
+        test_data = {
+            "groups": {"group:test": ["user@example.com"]},
+            "hosts": {"host1": "192.168.1.1"},
+            "tagOwners": {"tag:web": ["group:admin"]},
+            "acls": [{"src": ["group:test"], "dst": ["host1:80"]}],
+            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}]
+        }
+
+        # Mock successful Tailscale validation
+        mock_subprocess.return_value = MagicMock(returncode=0)
+
+        parser = PolicyParser()
+        parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
+        parser._validator.validate_policy_structure = MagicMock()
+
+        parser.parse_policy()
+
+        # Verify Tailscale validation was called
+        mock_subprocess.assert_called_once()
+
+        # Verify local validation was NOT called
+        parser._validator.validate_policy_structure.assert_not_called()
+
+        # Verify data was still parsed correctly
+        assert parser.groups == test_data["groups"]
+        assert parser.hosts == test_data["hosts"]
+
+    @patch.dict('os.environ', {}, clear=True)
+    def test_parse_policy_without_tailscale_validation(self):
+        """Test that local validation is used when Tailscale credentials are not available."""
+        test_data = {
+            "groups": {"group:test": ["user@example.com"]},
+            "hosts": {"host1": "192.168.1.1"},
+            "tagOwners": {"tag:web": ["group:admin"]},
+            "acls": [{"src": ["group:test"], "dst": ["host1:80"]}],
+            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}]
+        }
+
+        parser = PolicyParser()
+        parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
+        parser._validator.validate_policy_structure = MagicMock()
+
+        parser.parse_policy()
+
+        # Verify local validation WAS called
+        parser._validator.validate_policy_structure.assert_called_once_with(test_data)
+
+        # Verify data was parsed correctly
+        assert parser.groups == test_data["groups"]
+        assert parser.hosts == test_data["hosts"]
+
+    @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
+    @patch('subprocess.run')
+    def test_parse_policy_tailscale_validation_failure(self, mock_subprocess):
+        """Test that Tailscale validation failures are properly raised."""
+        # Mock failed Tailscale validation
+        mock_subprocess.side_effect = MagicMock(
+            side_effect=Exception("Tailscale validation failed")
+        )
+
+        parser = PolicyParser()
+
+        with pytest.raises(Exception, match="Tailscale validation failed"):
             parser.parse_policy()
 
 
@@ -127,6 +196,10 @@ class TestPolicyValidator:
         validator.validate_ip_specifications(["tcp:443"], 1)
         validator.validate_ip_specifications(["tcp:8000-8999"], 1)
         validator.validate_ip_specifications(["tcp"], 1)
+        # Test bare port numbers (Tailscale syntax)
+        validator.validate_ip_specifications(["53"], 1)
+        validator.validate_ip_specifications(["853"], 1)
+        validator.validate_ip_specifications(["8000-8999"], 1)
     
     def test_validate_ip_specifications_invalid_format(self):
         """Test validation of invalid IP specification formats."""
@@ -136,9 +209,17 @@ class TestPolicyValidator:
         with pytest.raises(ValueError, match="Invalid protocol 'invalid'"):
             validator.validate_ip_specifications(["invalid:443"], 1)
 
-        # Test port out of range (gets caught as invalid port format due to int conversion)
-        with pytest.raises(ValueError, match="Invalid port format"):
+        # Test port out of range with protocol prefix
+        with pytest.raises(ValueError, match="Port 99999 out of valid range"):
             validator.validate_ip_specifications(["tcp:99999"], 1)
+
+        # Test invalid bare specification (not a port, range, or protocol)
+        with pytest.raises(ValueError, match="Invalid specification 'notaport'"):
+            validator.validate_ip_specifications(["notaport"], 1)
+
+        # Test bare port out of range
+        with pytest.raises(ValueError, match="Port 99999 out of valid range"):
+            validator.validate_ip_specifications(["99999"], 1)
 
 
 class TestPolicyData:

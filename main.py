@@ -110,7 +110,7 @@ def main() -> None:
         logging.debug(f"Policy parsing completed. Found {len(policy_parser.groups)} groups, {len(policy_parser.hosts)} hosts, {len(policy_parser.acls)} ACLs, {len(policy_parser.grants)} grants")
     except ValueError as e:
         logging.error(f"Policy parsing failed: {str(e)}")
-        return
+        exit(1)
 
     logging.debug("Initializing NetworkGraph via DI container")
     network_graph = NetworkGraph(policy_parser.hosts, policy_parser.groups, policy_parser.rule_line_numbers)

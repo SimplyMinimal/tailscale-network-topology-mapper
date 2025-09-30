@@ -9,6 +9,7 @@ RUN pip install -r requirements.txt
 
 WORKDIR /app/tailscale-network-topology-mapper
 COPY . /app/tailscale-network-topology-mapper
+RUN if [ ! -f policy.hujson ]; then echo "ERROR: policy.hujson file not found" && exit 1; fi
 RUN pip install -r requirements.txt
 RUN chown -R appuser:appgroup /app
 RUN python main.py

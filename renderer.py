@@ -602,8 +602,8 @@ function performEnhancedSearch(searchTerm) {{
     // Update node appearance
     for (let nodeId in allNodes) {{
         if (matchingNodes.includes(nodeId)) {{
-            // Highlight matching nodes
-            allNodes[nodeId].color = '#ff6b6b'; // Bright red for matches
+            // Keep original color for matching nodes, just add border highlight
+            allNodes[nodeId].color = originalNodeColors[nodeId];
             allNodes[nodeId].borderWidth = 4;
         }} else {{
             // Dim non-matching nodes

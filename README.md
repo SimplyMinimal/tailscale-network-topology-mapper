@@ -60,22 +60,69 @@ Hover over nodes to see:
 ## 🛠️ Setup Instructions
 
 ### Requirements
-- Python 3
+- Python 3.10+
 - Git
+- [uv](https://docs.astral.sh/uv/) (recommended) or pip
 
-### Steps
+--- 
+
+### Installation Methods
+
+#### Option 1: Using uvx (Recommended - No Installation Required!)
+
+The fastest way to run the mapper without any installation:
+
+```bash
+# Clone the repo
+git clone https://github.com/SimplyMinimal/tailscale-network-topology-mapper
+cd tailscale-network-topology-mapper
+
+# Add your policy file (see configuration section below)
+# Then run directly with uvx
+uvx --from . tailscale-mapper
+```
+
+#### Option 2: Using uv (Recommended for Development)
+
+1. Install uv if you haven't already:
+   ```bash
+   # macOS/Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+
+   # Windows
+   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+   ```
+
+2. Clone and set up:
+   ```bash
+   git clone https://github.com/SimplyMinimal/tailscale-network-topology-mapper
+   cd tailscale-network-topology-mapper
+
+   # Install dependencies
+   uv pip install -r requirements.txt
+   ```
+
+#### Option 3: Using pip (Traditional Method)
+
 1. Clone the repo:
    ```bash
    git clone https://github.com/SimplyMinimal/tailscale-network-topology-mapper
    cd tailscale-network-topology-mapper
    ```
+
 2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-3. Add your policy:
+
+---
+
+### Configuration
+
+1. Add your policy:
    - Replace the contents of `policy.hujson` with your actual Tailscale ACL.
-4. Set your company domain:
+
+2. Set your company domain:
    - Edit `config.py` and change:
      ```python
      COMPANY_DOMAIN = "example.com"
@@ -85,15 +132,24 @@ Hover over nodes to see:
      export TS_COMPANY_DOMAIN=yourcompany.com
      ```
 
+---
+
 ### Generate the Map
-```bash
-python3 main.py
-```
 
 ```bash
-# or to show every step as it generates the map
+# Using uvx (no installation needed)
+uvx --from . tailscale-mapper
+
+# Using uv
+uv run python main.py
+
+# Using traditional Python
+python3 main.py
+
+# Enable debug logging with any method by adding --debug
 python3 main.py --debug
 ```
+
 This creates (or updates) `network_topology.html`. Open it in any browser.
 
 ---

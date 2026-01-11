@@ -2,3 +2,4 @@ go-example/
 __pycache__/
 .vscode/
 *.cpython*
+.venv/

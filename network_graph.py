@@ -44,7 +44,7 @@ class NetworkGraph(NetworkGraphInterface):
         self.edges.append((src, dst))
         logging.debug(f"Added edge: {src} -> {dst}")
 
-    def build_graph(self, acls: List[Dict[str, List[str]]], grants: List[Dict[str, Union[str, List[str]]]] = None) -> None:
+    def build_graph(self, acls: List[Dict[str, Union[str, List[str]]]], grants: List[Dict[str, Union[str, List[str]]]] = None) -> None:
         """
         Build the network graph from ACL rules and grant rules with optimized performance.
 

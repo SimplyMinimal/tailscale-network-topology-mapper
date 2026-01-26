@@ -41,11 +41,38 @@ if "TS_COMPANY_DOMAIN" in os.environ:
     print(f'Using {COMPANY_DOMAIN} as company domain')
 
 # Policy file configuration
-POLICY_FILE: str = os.path.join(os.path.dirname(__file__), "policy.hujson")
+def get_policy_file_path() -> str:
+    """
+    Get the policy file path, checking multiple locations in order:
+    1. TS_POLICY_FILE environment variable
+    2. policy.hujson in current working directory
+    3. policy.hujson in package directory
+
+    Returns:
+        str: Path to the policy file
+    """
+    # Check environment variable first
+    if "TS_POLICY_FILE" in os.environ:
+        return os.environ["TS_POLICY_FILE"]
+
+    # Check current working directory
+    cwd_policy = os.path.join(os.getcwd(), "policy.hujson")
+    if os.path.exists(cwd_policy):
+        return cwd_policy
+
+    # Fall back to package directory
+    return os.path.join(os.path.dirname(__file__), "policy.hujson")
+
+# Evaluate at import time - will use current working directory at that moment
+POLICY_FILE: str = get_policy_file_path()
 """
 Default path to the Tailscale policy file.
 
-Points to 'policy.hujson' in the same directory as this configuration file.
+Checks multiple locations in order:
+1. TS_POLICY_FILE environment variable
+2. policy.hujson in current working directory
+3. policy.hujson in package directory
+
 Supports both JSON and HuJSON (Human JSON) formats.
 """
 

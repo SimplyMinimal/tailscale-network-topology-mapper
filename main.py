@@ -88,6 +88,12 @@ def main() -> None:
         action="store_true",
         help="Enable debug logging for detailed execution information"
     )
+    parser.add_argument(
+        "--policy-file",
+        type=str,
+        default=None,
+        help="Path to the policy file (default: policy.hujson in current directory or package directory)"
+    )
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
@@ -99,12 +105,25 @@ def main() -> None:
     logging.info("Starting Tailscale Network Topology Mapper")
     logging.debug(f"Debug logging enabled: {args.debug}")
 
-    # Set up dependency injection
-    container = setup_dependency_injection()
+    # Determine policy file path
+    if args.policy_file:
+        policy_file = args.policy_file
+    else:
+        # Check current working directory first, then fall back to config
+        import os
+        from config import get_policy_file_path
+        cwd_policy = os.path.join(os.getcwd(), "policy.hujson")
+        if os.path.exists(cwd_policy):
+            policy_file = cwd_policy
+        else:
+            policy_file = get_policy_file_path()
+
+    logging.debug(f"Using policy file: {policy_file}")
 
     try:
         logging.debug("Initializing PolicyParser via DI container")
-        policy_parser = container.get(PolicyParserInterface)
+        # Create PolicyParser with explicit policy file path
+        policy_parser = PolicyParser(policy_file=policy_file)
         logging.debug("Parsing policy file")
         policy_parser.parse_policy()
         logging.debug(f"Policy parsing completed. Found {len(policy_parser.groups)} groups, {len(policy_parser.hosts)} hosts, {len(policy_parser.acls)} ACLs, {len(policy_parser.grants)} grants")

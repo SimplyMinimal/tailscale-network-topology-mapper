@@ -1,6 +1,6 @@
 [project]
 name = "tailscale-network-topology-mapper"
-version = "2.1.1"
+version = "2.1.2"
 description = "A visual way to view your ACL and Grant rules for Tailscale"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -52,6 +52,42 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+exclude = [
+    "tests/",
+    "docs/",
+    "images/",
+    "example-policy/",
+    "scripts/",
+    "server/",
+    "src/",
+    "__pycache__/",
+    "*.pyc",
+    ".git/",
+    ".github/",
+    "Dockerfile",
+    "Makefile",
+    "uv.lock",
+    "version-cache.json",
+    "network_topology.html",
+    "policy.hujson",
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "tests/",
+    "images/",
+    "example-policy/",
+    "server/",
+    "src/",
+    "__pycache__/",
+    "*.pyc",
+    ".git/",
+    ".github/",
+    "uv.lock",
+    "version-cache.json",
+    "network_topology.html",
+    "policy.hujson",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

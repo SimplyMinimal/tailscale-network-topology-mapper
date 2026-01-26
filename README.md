@@ -64,8 +64,7 @@ Hover over nodes to see:
 - Git
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
 
---- 
-
+---
 ### Installation Methods
 
 #### Option 1: Using uvx (Recommended - No Installation Required!)
@@ -73,15 +72,20 @@ Hover over nodes to see:
 The fastest way to run the mapper without any installation:
 
 ```bash
-# Clone the repo
-git clone https://github.com/SimplyMinimal/tailscale-network-topology-mapper
-cd tailscale-network-topology-mapper
-
-# Add your policy file (see configuration section below)
+# Add your policy.hujson file to current directory (see configuration section below)
 # Then run directly with uvx
-uvx --from . tailscale-mapper
+uvx tailscale-network-topology-mapper
 ```
 
+This will run the latest version of the mapper against the policy file (`policy.hujson`). You will now have a `network_topology.html` file in the current directory that you can open in your browser.
+
+Optionally, you can point the tool to a specific policy file:
+```bash
+uvx tailscale-network-topology-mapper --policy-file /path/to/your/policy.hujson
+```
+
+
+---
 #### Option 2: Using uv (Recommended for Development)
 
 1. Install uv if you haven't already:
@@ -138,7 +142,7 @@ uvx --from . tailscale-mapper
 
 ```bash
 # Using uvx (no installation needed)
-uvx --from . tailscale-mapper
+uvx tailscale-network-topology-mapper
 
 # Using uv
 uv run python main.py

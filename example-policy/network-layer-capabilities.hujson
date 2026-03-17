@@ -1,0 +1,128 @@
+{
+	// Example Tailscale policy file demonstrating network layer capabilities
+	// Reference: https://tailscale.com/docs/reference/syntax/grants#network-layer-capabilities
+
+	"groups": {
+		"group:engineering": ["user1@example.com", "user2@example.com"],
+		"group:ops":         ["ops@example.com"],
+		"group:monitoring":  ["monitor@example.com"],
+	},
+
+	"hosts": {
+		"web-server":      "100.64.0.10",
+		"database":        "100.64.0.20",
+		"monitoring-host": "100.64.0.30",
+	},
+
+	"grants": [
+		// Example 1: ICMP wildcard - Allow all ICMP traffic
+		// This is especially useful for protocols that do not have ports
+		{
+			"src": ["group:monitoring"],
+			"dst": ["*"],
+			"ip":  ["icmp:*"],
+		},
+
+		// Example 2: TCP wildcard - Allow all TCP ports
+		{
+			"src": ["group:engineering"],
+			"dst": ["web-server"],
+			"ip":  ["tcp:*"],
+		},
+
+		// Example 3: UDP wildcard - Allow all UDP ports
+		{
+			"src": ["group:ops"],
+			"dst": ["database"],
+			"ip":  ["udp:*"],
+		},
+
+		// Example 4: SCTP wildcard - Allow all SCTP ports
+		{
+			"src": ["group:engineering"],
+			"dst": ["monitoring-host"],
+			"ip":  ["sctp:*"],
+		},
+
+		// Example 5: Specific protocol and port combination
+		{
+			"src": ["group:engineering"],
+			"dst": ["web-server"],
+			"ip":  ["tcp:443", "tcp:80"],
+		},
+
+		// Example 6: Port range with protocol
+		{
+			"src": ["group:ops"],
+			"dst": ["database"],
+			"ip":  ["tcp:3000-3999"],
+		},
+
+		// Example 7: Wildcard for all ports and protocols
+		{
+			"src": ["group:engineering"],
+			"dst": ["monitoring-host"],
+			"ip":  ["*"],
+		},
+
+		// Example 8: Bare port number (implies TCP, UDP, and ICMP)
+		{
+			"src": ["group:ops"],
+			"dst": ["web-server"],
+			"ip":  ["443", "80"],
+		},
+
+		// Example 9: Bare port range
+		{
+			"src": ["group:engineering"],
+			"dst": ["database"],
+			"ip":  ["8000-8999"],
+		},
+
+		// Example 10: Mixed specifications - combining different formats
+		{
+			"src": ["group:ops"],
+			"dst": ["*"],
+			"ip": [
+				"icmp:*", // All ICMP
+				"tcp:443", // HTTPS
+				"tcp:22", // SSH
+				"udp:53", // DNS
+				"tcp:80-443", // HTTP to HTTPS range
+			],
+		},
+
+		// Example 11: Protocol-only specification (no port)
+		{
+			"src": ["group:monitoring"],
+			"dst": ["*"],
+			"ip":  ["tcp:443", "udp:5050"],
+		},
+
+		// Example 12: Using IANA protocol numbers with wildcards
+		// GRE (Generic Routing Encapsulation) - IANA number 47
+		{
+			"src": ["group:ops"],
+			"dst": ["monitoring-host"],
+			"ip":  ["gre:*"],
+		},
+
+		// Example 13: ESP (Encap Security Payload) - IANA number 50
+		{
+			"src": ["group:engineering"],
+			"dst": ["database"],
+			"ip":  ["esp:*"],
+		},
+
+		// Example 14: Multiple protocol wildcards
+		{
+			"src": ["group:ops"],
+			"dst": ["web-server"],
+			"ip": [
+				"tcp:*",
+				"udp:*",
+				"icmp:*",
+			],
+		},
+	],
+}

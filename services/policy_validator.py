@@ -1,5 +1,8 @@
 import logging
-from typing import Dict, List, Union, Any
+import os
+from typing import Dict, List, Union, Any, Optional
+
+import requests
 
 from config import VALID_PROTOCOLS, MIN_PORT, MAX_PORT
 
@@ -65,9 +68,12 @@ class PolicyValidator:
         - Wildcard: "*" (all protocols and ports)
         - Bare port: "53" (any protocol on port 53)
         - Port range: "8000-8999" (any protocol on port range)
-        - Protocol only: "tcp" (all TCP traffic)
+        - Protocol:wildcard: "tcp:*" (all TCP traffic)
         - Protocol:port: "tcp:53" (TCP on port 53)
         - Protocol:port-range: "tcp:8000-8999" (TCP on port range)
+
+        Note: Bare protocol names (e.g., "tcp") without a port or wildcard are invalid.
+        Use "tcp:*" for all TCP traffic.
 
         Args:
             ip_specs: IP specifications to validate
@@ -100,11 +106,11 @@ class PolicyValidator:
                     # Validate as port specification
                     PolicyValidator._validate_port_specification(spec, grant_num, spec)
                 elif spec in VALID_PROTOCOLS:
-                    # Valid protocol without port
-                    pass
+                    # Bare protocol without port is invalid - must use protocol:* or protocol:port
+                    raise ValueError(f'Grant {grant_num}: Bare protocol "{spec}" is invalid. Use "{spec}:*" for all {spec} traffic or "{spec}:port" for specific ports.')
                 else:
-                    raise ValueError(f"Grant {grant_num}: Invalid specification '{spec}'. "
-                                   f"Must be a port number, port range, protocol name, or protocol:port format. "
+                    raise ValueError(f"Grant {grant_num}: Invalid specification '{spec}'."
+                                   f"Must be a port number, port range, or protocol:port format."
                                    f"Valid protocols: {VALID_PROTOCOLS}")
 
     @staticmethod
@@ -138,6 +144,10 @@ class PolicyValidator:
     @staticmethod
     def _validate_port_specification(port_spec: str, grant_num: int, full_spec: str) -> None:
         """Validate port specification."""
+        # Handle wildcard
+        if port_spec == "*":
+            return
+
         # Handle port ranges
         if "-" in port_spec:
             try:
@@ -159,9 +169,71 @@ class PolicyValidator:
         else:
             # Single port
             try:
+                logging.debug(f"Validating port specification: {port_spec}")
                 port = int(port_spec)
             except ValueError:
                 raise ValueError(f"Grant {grant_num}: Invalid port format in '{full_spec}'")
 
             if port < MIN_PORT or port > MAX_PORT:
                 raise ValueError(f"Grant {grant_num}: Port {port} out of valid range ({MIN_PORT}-{MAX_PORT}) in '{full_spec}'")
+
+    @staticmethod
+    def validate_with_tailscale_api(
+        policy_content: str,
+        api_key: Optional[str] = None,
+        tailnet: Optional[str] = None
+    ) -> None:
+        """
+        Validate a Tailscale policy file using the Tailscale Validation API in lieu of local validation.
+
+        Args:
+            policy_content: Already serialized JSON policy content (string)
+            api_key: Tailscale API key (defaults to TAILSCALE_API_KEY env var)
+            tailnet: Tailscale tailnet (defaults to TAILSCALE_TAILNET env var)
+
+        Raises:
+            ValueError: If validation fails or required parameters are missing
+        """
+        # Get credentials from environment if not provided
+        api_key = api_key or os.environ.get('TAILSCALE_API_KEY')
+        tailnet = tailnet or os.environ.get('TAILSCALE_TAILNET')
+
+        # Validate required inputs
+        if not tailnet:
+            raise ValueError("Missing TAILSCALE_TAILNET environment variable. Required for API Endpoint.")
+        if not api_key:
+            raise ValueError("Missing TAILSCALE_API_KEY environment variable")
+
+        logging.info("Validating policy content with Tailscale API")
+
+        # Construct the validation URL
+        validate_url = f"https://api.tailscale.com/api/v2/tailnet/{tailnet}/acl/validate"
+
+        try:
+            # Make the API request
+            # Tailscale API uses basic auth with API key as username and empty password
+            response = requests.post(
+                validate_url,
+                auth=(api_key, ''),
+                headers={'Content-Type': 'application/json'},
+                data=policy_content,
+                timeout=30
+            )
+
+            # Check the response
+            if response.status_code == 200:
+                response_json = response.json()
+                # Tailscale returns {} for valid policies
+                if response_json == {}:
+                    logging.info("✔ Tailscale policy is valid.")
+                else:
+                    # If response is not empty, it contains validation errors
+                    raise ValueError(f"Policy validation failed:\n{response.text}")
+            else:
+                # Handle HTTP errors
+                raise ValueError(
+                    f"Policy validation failed (HTTP {response.status_code}):\n{response.text}"
+                )
+
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Failed to connect to Tailscale API: {str(e)}")

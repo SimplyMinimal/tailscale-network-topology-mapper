@@ -4,6 +4,7 @@ Test suite for refactored PolicyParser class and related components.
 import pytest
 import tempfile
 import json
+import os
 from unittest.mock import patch, MagicMock
 from policy_parser import PolicyParser
 from services.file_loader import PolicyFileLoader
@@ -70,8 +71,7 @@ class TestPolicyParser:
             parser.parse_policy()
 
     @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
-    @patch('subprocess.run')
-    def test_parse_policy_with_tailscale_validation(self, mock_subprocess):
+    def test_parse_policy_with_tailscale_validation(self):
         """Test that local validation is skipped when Tailscale validation is used."""
         test_data = {
             "groups": {"group:test": ["user@example.com"]},
@@ -81,17 +81,17 @@ class TestPolicyParser:
             "grants": [{"src": ["group:test"], "dst": ["host1:443"]}]
         }
 
-        # Mock successful Tailscale validation
-        mock_subprocess.return_value = MagicMock(returncode=0)
-
         parser = PolicyParser()
         parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
         parser._validator.validate_policy_structure = MagicMock()
+        parser._validator.validate_with_tailscale_api = MagicMock()
 
         parser.parse_policy()
 
-        # Verify Tailscale validation was called
-        mock_subprocess.assert_called_once()
+        # Verify Tailscale validation was called with the serialized JSON
+        parser._validator.validate_with_tailscale_api.assert_called_once()
+        call_args = parser._validator.validate_with_tailscale_api.call_args[0][0]
+        assert isinstance(call_args, str)  # Should be JSON string, not file path
 
         # Verify local validation was NOT called
         parser._validator.validate_policy_structure.assert_not_called()
@@ -125,17 +125,22 @@ class TestPolicyParser:
         assert parser.hosts == test_data["hosts"]
 
     @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
-    @patch('subprocess.run')
-    def test_parse_policy_tailscale_validation_failure(self, mock_subprocess):
+    def test_parse_policy_tailscale_validation_failure(self):
         """Test that Tailscale validation failures are properly raised."""
-        # Mock failed Tailscale validation
-        mock_subprocess.side_effect = MagicMock(
-            side_effect=Exception("Tailscale validation failed")
-        )
+        test_data = {
+            "groups": {"group:test": ["user@example.com"]},
+            "hosts": {"host1": "192.168.1.1"},
+        }
 
         parser = PolicyParser()
+        parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
 
-        with pytest.raises(Exception, match="Tailscale validation failed"):
+        # Mock failed Tailscale validation
+        parser._validator.validate_with_tailscale_api = MagicMock(
+            side_effect=ValueError("Policy validation failed")
+        )
+
+        with pytest.raises(ValueError, match="Policy validation failed"):
             parser.parse_policy()
 
 
@@ -195,7 +200,9 @@ class TestPolicyValidator:
         validator.validate_ip_specifications(["*"], 1)
         validator.validate_ip_specifications(["tcp:443"], 1)
         validator.validate_ip_specifications(["tcp:8000-8999"], 1)
-        validator.validate_ip_specifications(["tcp"], 1)
+        validator.validate_ip_specifications(["tcp:*"], 1)  # Protocol with wildcard
+        validator.validate_ip_specifications(["udp:*"], 1)  # Protocol with wildcard
+        validator.validate_ip_specifications(["icmp:*"], 1)  # Protocol with wildcard
         # Test bare port numbers (Tailscale syntax)
         validator.validate_ip_specifications(["53"], 1)
         validator.validate_ip_specifications(["853"], 1)
@@ -220,6 +227,75 @@ class TestPolicyValidator:
         # Test bare port out of range
         with pytest.raises(ValueError, match="Port 99999 out of valid range"):
             validator.validate_ip_specifications(["99999"], 1)
+
+        # Test bare protocol without port (should fail - must use protocol:* or protocol:port)
+        with pytest.raises(ValueError, match='Bare protocol "tcp" is invalid'):
+            validator.validate_ip_specifications(["tcp"], 1)
+
+        with pytest.raises(ValueError, match='Bare protocol "udp" is invalid'):
+            validator.validate_ip_specifications(["udp"], 1)
+
+    @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
+    @patch('requests.post')
+    def test_validate_with_tailscale_api_success(self, mock_post):
+        """Test successful Tailscale API validation."""
+        # Mock successful API response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {}
+        mock_post.return_value = mock_response
+
+        validator = PolicyValidator()
+        # Pass JSON string instead of file path
+        policy_json = json.dumps({"acls": []})
+        validator.validate_with_tailscale_api(policy_json)
+
+        # Verify API was called correctly
+        mock_post.assert_called_once()
+        call_args = mock_post.call_args
+        assert call_args[1]['auth'] == ('test-key', '')
+        assert 'https://api.tailscale.com/api/v2/tailnet/test-tailnet/acl/validate' in call_args[0]
+
+    @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
+    @patch('requests.post')
+    def test_validate_with_tailscale_api_validation_error(self, mock_post):
+        """Test Tailscale API validation with policy errors."""
+        # Mock API response with validation errors
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"error": "Invalid policy"}
+        mock_response.text = '{"error": "Invalid policy"}'
+        mock_post.return_value = mock_response
+
+        validator = PolicyValidator()
+        # Pass JSON string instead of file path
+        policy_json = json.dumps({"acls": []})
+        with pytest.raises(ValueError, match="Policy validation failed"):
+            validator.validate_with_tailscale_api(policy_json)
+
+    @patch.dict('os.environ', {}, clear=True)
+    def test_validate_with_tailscale_api_missing_credentials(self):
+        """Test Tailscale API validation with missing credentials."""
+        validator = PolicyValidator()
+        # Pass JSON string - should fail due to missing credentials
+        with pytest.raises(ValueError, match="Missing TAILSCALE_TAILNET environment variable"):
+            validator.validate_with_tailscale_api("{\"grants\": []}")
+
+    @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
+    @patch('requests.post')
+    def test_validate_with_tailscale_api_http_error(self, mock_post):
+        """Test Tailscale API validation with HTTP error."""
+        # Mock HTTP error response
+        mock_response = MagicMock()
+        mock_response.status_code = 401
+        mock_response.text = 'Unauthorized'
+        mock_post.return_value = mock_response
+
+        validator = PolicyValidator()
+        # Pass JSON string instead of file path
+        policy_json = json.dumps({"acls": []})
+        with pytest.raises(ValueError, match="Policy validation failed \\(HTTP 401\\)"):
+            validator.validate_with_tailscale_api(policy_json)
 
 
 class TestPolicyData:

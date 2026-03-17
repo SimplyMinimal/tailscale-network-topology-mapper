@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, List, Union
-import subprocess
 import os
+import json
 
 from config import POLICY_FILE
 from services import PolicyParserInterface
@@ -73,14 +73,19 @@ class PolicyParser(PolicyParserInterface):
         """
         logging.debug(f"Starting policy parsing for: {self.policy_file}")
 
+        # Load the policy file FIRST
+        raw_data = self._file_loader.load_json_or_hujson(self.policy_file)
+
+        # Serialize the raw data to JSON string for Tailscale API validation
+        policy_json = json.dumps(raw_data)
+
         # Use Tailscale's validation if credentials are available
         use_tailscale_validation = self._should_use_tailscale_validation()
         if use_tailscale_validation:
-            self._validate_with_tailscale_api()
-            logging.debug("Using Tailscale validation - skipping local policy structure validation")
-
-        # Load the policy file
-        raw_data = self._file_loader.load_json_or_hujson(self.policy_file)
+            self._validator.validate_with_tailscale_api(policy_json)
+            logging.debug("Using Tailscale validation API")
+        else:
+            logging.debug("Tailscale environment variables not set - using local policy structure validation")
 
         # Extract rule line numbers
         self._rule_line_numbers = self._file_loader.extract_rule_line_numbers(self.policy_file)
@@ -104,13 +109,3 @@ class PolicyParser(PolicyParserInterface):
         """Check if Tailscale API credentials are available."""
         return bool(os.environ.get('TAILSCALE_API_KEY') and os.environ.get('TAILSCALE_TAILNET'))
 
-    def _validate_with_tailscale_api(self) -> None:
-        """Validate policy using Tailscale's API."""
-        try:
-            subprocess.run(
-                ['./scripts/validate-policy.sh', self.policy_file],
-                capture_output=True, text=True, check=True
-            )
-            logging.debug("Tailscale API validation passed")
-        except subprocess.CalledProcessError as e:
-            raise ValueError(f"Tailscale API validation failed: {e.stderr}")

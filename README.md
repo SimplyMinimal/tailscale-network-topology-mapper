@@ -84,9 +84,13 @@ Optionally, you can point the tool to a specific policy file:
 uvx tailscale-network-topology-mapper --policy-file /path/to/your/policy.hujson
 ```
 
+To use Tailscale's API for validation instead of the built-in offline sanity checks, see the [Using Tailscale's API for Validation](#using-tailscales-api-for-validation) section below.
+
 
 ---
 #### Option 2: Using uv (Recommended for Development)
+<details close>
+<summary><b>Show uv installation</b></summary>
 
 1. Install uv if you haven't already:
    ```bash
@@ -105,8 +109,12 @@ uvx tailscale-network-topology-mapper --policy-file /path/to/your/policy.hujson
    # Install dependencies
    uv pip install -r requirements.txt
    ```
+   </details>
+
 
 #### Option 3: Using pip (Traditional Method)
+   <details close>
+   <summary><b>Show Traditional pip installation</b></summary>
 
 1. Clone the repo:
    ```bash
@@ -118,23 +126,104 @@ uvx tailscale-network-topology-mapper --policy-file /path/to/your/policy.hujson
    ```bash
    pip install -r requirements.txt
    ```
+   </details>
 
 ---
 
 ### Configuration
+   <details close>
+   <summary><b>Click to show Optional configuration</b></summary>
 
-1. Add your policy:
-   - Replace the contents of `policy.hujson` with your actual Tailscale ACL.
+   1. Add your policy:
+      - Replace the contents of `policy.hujson` with your actual Tailscale ACL.
 
-2. Set your company domain:
-   - Edit `config.py` and change:
-     ```python
-     COMPANY_DOMAIN = "example.com"
-     ```
-   - Or set an environment variable:
-     ```bash
-     export TS_COMPANY_DOMAIN=yourcompany.com
-     ```
+   2. Set your company domain:
+      - Edit `config.py` and change:
+      ```python
+      COMPANY_DOMAIN = "example.com"
+      ```
+      - Or set an environment variable:
+      ```bash
+      export TS_COMPANY_DOMAIN=yourcompany.com
+      ```
+
+   3. Set your Tailscale API key and tailnet environment variables for Tailscale API validation:
+      ```bash
+      export TAILSCALE_API_KEY=your-api-key
+      export TAILSCALE_TAILNET=your-tailnet
+      ```
+   </details>
+
+---
+
+### Using Tailscale's API for Validation
+<details close>
+<summary><b>Click to show setup for Tailscale API Validation</b></summary>
+
+By default, the tool validates your policy using local structure validation without an API key as a best-effort validation. However, you can optionally configure the tool to use Tailscale's API for validation. This provides a more accurate validation but requires setting up environment variables for your Tailscale API key and tailnet. It's recommended to protect the environment variables which is out of the scope of this tool for now.
+
+#### Setup
+
+1. **Get your Tailscale API Key**:
+   - Go to the [Tailscale Admin Console](https://login.tailscale.com/admin/settings/keys)
+   - Create a new API access token
+
+2. **Get your Tailnet Name**:
+   - This is typically your organization name (e.g., `example.com` in `https://login.tailscale.com/admin/settings/general`). You can use either Tailnet ID or Legacy ID. 
+
+3. **Set Environment Variables**:
+
+   macOS/Linux
+   ```bash
+   # Set your API key
+   export TAILSCALE_API_KEY=tskey-api-xxxxx
+
+   # Set your tailnet
+   export TAILSCALE_TAILNET=yourcompany.com
+   ```
+
+   Windows
+   ```bash
+   # Set your API key
+   set TAILSCALE_API_KEY=tskey-api-xxxxx
+
+   # Set your tailnet
+   set TAILSCALE_TAILNET=yourcompany.com
+   ```
+
+   <!-- Alternatively, you can set these variables using the OS native credential manager
+   <details close>
+   <summary><b>Show me how to set secure environment variables on my OS</b></summary>
+
+   ### macOS
+   Set the environment variables:
+   ```bash
+   security add-generic-password -a "tailscale" -s "api_key" -w "tskey-api-xxxxx"
+   security add-generic-password -a "tailscale" -s "tailnet" -w "yourcompany.com"
+   ```
+
+   Retrieve the environment variables:
+ 
+   ```bash
+   export TAILSCALE_API_KEY=$(security find-generic-password -a "tailscale" -s "api_key" -w)
+   export TAILSCALE_TAILNET=$(security find-generic-password -a "tailscale" -s "tailnet" -w)
+   ```
+   </details> 
+   
+   TODO: Add instructions on managing environment variables for Windows and Linux
+   -->
+#### Usage
+
+Once the environment variables are set, the tool will automatically use Tailscale's API for validation:
+```bash
+# The tool will now validate via Tailscale's API
+uvx tailscale-network-topology-mapper
+# or
+python3 main.py
+```
+
+If the environment variables are not set, the tool falls back to internal sanity checks for policy validation.
+</details>
 
 ---
 
@@ -159,7 +248,8 @@ This creates (or updates) `network_topology.html`. Open it in any browser.
 ---
 
 ## 🐳 Running with Docker
-
+ <details close>
+ <summary><b>Docker instructions</b></summary>
 If you prefer Docker:
 
 ### Prerequisites
@@ -174,6 +264,7 @@ make build run
 Then open [http://localhost:8080](http://localhost:8080) in your browser.
 
 > Use the filter bar or click on any node to narrow down the view.
+</details>
 
 ---
 

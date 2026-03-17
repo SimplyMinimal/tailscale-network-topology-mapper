@@ -32,6 +32,8 @@ class NetworkGraph(NetworkGraphInterface):
         # Store searchable metadata for enhanced search functionality
         self.node_metadata: Dict[str, Dict[str, Union[str, List[str]]]] = {}  # node_id -> metadata
         self.edge_metadata: Dict[Tuple[str, str], Dict[str, Union[str, List[str]]]] = {}  # edge -> metadata
+        # Track mappings from base node IDs to full node IDs (with protocol specs)
+        self.node_id_mappings: Dict[str, List[str]] = {}  # base_node_id -> [full_node_id1, full_node_id2, ...]
         logging.debug(f"NetworkGraph initialized with {len(hosts)} hosts and {len(groups)} groups")
 
     def add_node(self, node: str, color: str, tooltip_text: str, shape: str = "dot") -> None:
@@ -304,8 +306,15 @@ class NetworkGraph(NetworkGraphInterface):
                         self._get_grant_dst_tooltip(dst, grant),
                         "triangle"
                     )
-                # Store/update searchable metadata
+                # Track mapping from base node ID to full node ID (compute once and reuse)
                 base_dst = dst.split(" [")[0] if " [" in dst and dst.endswith("]") else dst
+                if base_dst != dst:
+                    # This is an enhanced node ID, track the mapping
+                    if base_dst not in self.node_id_mappings:
+                        self.node_id_mappings[base_dst] = []
+                    if dst not in self.node_id_mappings[base_dst]:
+                        self.node_id_mappings[base_dst].append(dst)
+                # Store/update searchable metadata - reuse base_dst computed above
                 if base_dst not in self.node_metadata:
                     self.node_metadata[base_dst] = {
                         "node_id": base_dst,
@@ -618,8 +627,9 @@ class NetworkGraph(NetworkGraphInterface):
         """
         return {
             "nodes": self.node_metadata,
-            "edges": {f"{edge[0]}->{edge[1]}": metadata for edge, metadata in self.edge_metadata.items()}
-        }
+            "edges": {f"{edge[0]}->{edge[1]}": metadata for edge, metadata in self.edge_metadata.items()},
+            "node_id_mappings": self.node_id_mappings
+            }
 
     def _get_node_tooltip(self, node: str) -> str:
         if node.split(":")[0] in self.hosts:

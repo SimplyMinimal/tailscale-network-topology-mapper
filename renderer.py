@@ -324,6 +324,20 @@ function updateSearchDropdown(searchTerm) {{
 
     const term = searchTerm.toLowerCase().trim();
     const matchingNodes = [];
+    const allNodes = nodes.get({{ returnType: "Object" }});
+
+    // Get node ID mappings from search metadata
+    const nodeIdMappings = searchMetadata.node_id_mappings || {{}};
+
+    // Build a set of all searchable IDs (both base and full)
+    const searchableIds = new Set();
+    for (let nodeId in searchMetadata.nodes) {{
+        searchableIds.add(nodeId);
+        // Add full node IDs
+        if (nodeIdMappings[nodeId]) {{
+            nodeIdMappings[nodeId].forEach(id => searchableIds.add(id));
+        }}
+    }}
 
     // Search through all nodes
     for (let node of allSearchableNodes) {{
@@ -335,6 +349,17 @@ function updateSearchDropdown(searchTerm) {{
         if (node.id.toLowerCase().includes(term)) {{
             matches = true;
             matchDetails.push('name');
+        }}
+
+        // Also check if search term matches any full node ID
+        if (nodeIdMappings[node.id]) {{
+            for (let fullId of nodeIdMappings[node.id]) {{
+                if (fullId.toLowerCase().includes(term)) {{
+                    matches = true;
+                    matchDetails.push('name');
+                    break;
+                }}
+            }}
         }}
 
         // Search in protocols
@@ -528,7 +553,17 @@ function performEnhancedSearch(searchTerm) {{
     const allNodes = nodes.get({{ returnType: "Object" }});
     const matchingNodes = [];
 
+    // Get node ID mappings from search metadata
+    const nodeIdMappings = searchMetadata.node_id_mappings || {{}};
 
+    // Build a map of full node IDs to their base node IDs (reverse mapping)
+    const fullToBaseMap = {{}};
+    for (let baseId in nodeIdMappings) {{
+        const fullIds = nodeIdMappings[baseId];
+        for (let i = 0; i < fullIds.length; i++) {{
+            fullToBaseMap[fullIds[i]] = baseId;
+        }}
+    }}
 
     // Search through node metadata
     for (let nodeId in searchMetadata.nodes) {{
@@ -596,6 +631,10 @@ function performEnhancedSearch(searchTerm) {{
 
         if (matches) {{
             matchingNodes.push(nodeId);
+            // Also add all enhanced/full node IDs that map to this base node ID
+            if (nodeIdMappings[nodeId]) {{
+                matchingNodes.push(...nodeIdMappings[nodeId]);
+            }}
         }}
     }}
 

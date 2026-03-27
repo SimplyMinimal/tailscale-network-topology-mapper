@@ -27,7 +27,7 @@ dependencies = [
     "pyvis>=0.3.2",
     "hjson>=3.1.0",
     "beautifulsoup4",
-    "requests",
+    "requests>=2.33.0",
 ]
 
 [project.optional-dependencies]

@@ -86,6 +86,9 @@ uvx tailscale-network-topology-mapper --policy-file /path/to/your/policy.hujson
 
 To use Tailscale's API for validation instead of the built-in offline sanity checks, see the [Using Tailscale's API for Validation](#using-tailscales-api-for-validation) section below.
 
+View all the available commands
+
+`uvx tailscale-network-topology-mapper --help`
 
 ---
 #### Option 2: Using uv (Recommended for Development)
@@ -171,7 +174,7 @@ By default, the tool validates your policy using local structure validation with
 2. **Get your Tailnet Name**:
    - This is typically your organization name (e.g., `example.com` in `https://login.tailscale.com/admin/settings/general`). You can use either Tailnet ID or Legacy ID. 
 
-3. **Set Environment Variables**:
+3. **Set Environment Variables** (or use command line flags):
 
    macOS/Linux
    ```bash
@@ -212,9 +215,22 @@ By default, the tool validates your policy using local structure validation with
    
    TODO: Add instructions on managing environment variables for Windows and Linux
    -->
+#### Command Line Flags
+
+You can also use command line flags to control validation and provide credentials:
+
+- `--validate-with-tailscale-api` / `--tv`: Enable using Tailscale API for validation. If not used, falls back to local offline validation.
+- `--tailscale-api-key`: Provide API key via command line (overrides environment variable `TAILSCALE_API_KEY`).
+- `--tailscale-tailnet`: Provide tailnet via command line (overrides environment variable `TAILSCALE_TAILNET`).
+
+Example:
+```bash
+python3 main.py --validate-with-tailscale-api --tailscale-api-key tskey-api-xxxxx --tailscale-tailnet yourcompany.com
+```
+
 #### Usage
 
-Once the environment variables are set, the tool will automatically use Tailscale's API for validation:
+Once the environment variables (or command line flags) are set, the tool will automatically use Tailscale's API for validation:
 ```bash
 # The tool will now validate via Tailscale's API
 uvx tailscale-network-topology-mapper
@@ -222,7 +238,29 @@ uvx tailscale-network-topology-mapper
 python3 main.py
 ```
 
-If the environment variables are not set, the tool falls back to internal sanity checks for policy validation.
+If the environment variables are not set and no command line flags are provided, the tool falls back to internal sanity checks for policy validation.
+</details>
+
+### Fetching Policy File from Tailscale API
+<details close>
+<summary><b>Click to show remote policy file setup</b></summary>
+
+Instead of using a local policy file, you can fetch the policy file directly from the Tailscale API. This requires the same API credentials as validation.
+
+#### Command Line Flags
+
+- `--use-remote-tailscale-policy-file` / `--tpf`: Fetch policy file via Tailscale API (default: false). Cannot be used together with `--policy-file`.
+
+#### Usage
+
+```bash
+# Fetch policy from Tailscale API and generate map
+python3 main.py --use-remote-tailscale-policy-file --tailscale-api-key tskey-api-xxxxx --tailscale-tailnet yourcompany.com
+```
+
+When using remote policy file, validation is skipped entirely (the policy fetched from the API is already validated by Tailscale).
+
+Note: You cannot specify both `--use-remote-tailscale-policy-file` and `--policy-file`. The tool will exit with an error if both are provided.
 </details>
 
 ---
@@ -241,6 +279,19 @@ python3 main.py
 
 # Enable debug logging with any method by adding --debug
 python3 main.py --debug
+
+# Use Tailscale API for validation with command line credentials
+python3 main.py --validate-with-tailscale-api --tailscale-api-key tskey-api-xxxxx --tailscale-tailnet yourcompany.com
+
+# Fetch policy file directly from Tailscale API (skips local file)
+python3 main.py --use-remote-tailscale-policy-file --tailscale-api-key tskey-api-xxxxx --tailscale-tailnet yourcompany.com
+
+# Use remote policy file with debug logging
+# This assumes you already have environment variables set for `TAILSCALE_API_KEY` and `TAILSCALE_TAILNET`
+python3 main.py --use-remote-tailscale-policy-file --debug
+
+# Custom output path
+python3 main.py --output custom-output.html
 ```
 
 This creates (or updates) `network_topology.html`. Open it in any browser.

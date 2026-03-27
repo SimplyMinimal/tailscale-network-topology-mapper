@@ -1,10 +1,12 @@
 """
 Test suite for refactored PolicyParser class and related components.
 """
+
 import pytest
 import tempfile
 import json
 import os
+import requests
 from unittest.mock import patch, MagicMock
 from policy_parser import PolicyParser
 from services.file_loader import PolicyFileLoader
@@ -14,7 +16,7 @@ from models.policy_data import PolicyData
 
 class TestPolicyParser:
     """Test cases for PolicyParser."""
-    
+
     def test_init(self):
         """Test PolicyParser initialization."""
         parser = PolicyParser("/test/path")
@@ -24,7 +26,7 @@ class TestPolicyParser:
         assert parser.tag_owners == {}
         assert parser.acls == []
         assert parser.grants == []
-    
+
     def test_parse_policy_success(self):
         """Test successful policy parsing."""
         test_data = {
@@ -32,31 +34,33 @@ class TestPolicyParser:
             "hosts": {"host1": "192.168.1.1"},
             "tagOwners": {"tag:web": ["group:admin"]},
             "acls": [{"src": ["group:test"], "dst": ["host1:80"]}],
-            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}]
+            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}],
         }
-        
+
         parser = PolicyParser()
-        
+
         # Mock the file loader and validator
         parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
         parser._validator.validate_policy_structure = MagicMock()
-        
+
         parser.parse_policy()
-        
+
         assert parser.groups == test_data["groups"]
         assert parser.hosts == test_data["hosts"]
         assert parser.tag_owners == test_data["tagOwners"]
         assert parser.acls == test_data["acls"]
         assert parser.grants == test_data["grants"]
-    
+
     def test_parse_policy_file_error(self):
         """Test handling of file loading errors."""
         parser = PolicyParser()
-        parser._file_loader.load_json_or_hujson = MagicMock(side_effect=ValueError("File not found"))
-        
+        parser._file_loader.load_json_or_hujson = MagicMock(
+            side_effect=ValueError("File not found")
+        )
+
         with pytest.raises(ValueError, match="File not found"):
             parser.parse_policy()
-    
+
     def test_parse_policy_validation_error(self):
         """Test handling of validation errors."""
         test_data = {"grants": [{"dst": ["target"]}]}  # Missing src
@@ -70,7 +74,10 @@ class TestPolicyParser:
         with pytest.raises(ValueError, match="Grant 1 missing required 'src' field"):
             parser.parse_policy()
 
-    @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
+    @patch.dict(
+        "os.environ",
+        {"TAILSCALE_API_KEY": "test-key", "TAILSCALE_TAILNET": "test-tailnet"},
+    )
     def test_parse_policy_with_tailscale_validation(self):
         """Test that local validation is skipped when Tailscale validation is used."""
         test_data = {
@@ -78,10 +85,10 @@ class TestPolicyParser:
             "hosts": {"host1": "192.168.1.1"},
             "tagOwners": {"tag:web": ["group:admin"]},
             "acls": [{"src": ["group:test"], "dst": ["host1:80"]}],
-            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}]
+            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}],
         }
 
-        parser = PolicyParser()
+        parser = PolicyParser(validate_with_api=True)
         parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
         parser._validator.validate_policy_structure = MagicMock()
         parser._validator.validate_with_tailscale_api = MagicMock()
@@ -100,7 +107,7 @@ class TestPolicyParser:
         assert parser.groups == test_data["groups"]
         assert parser.hosts == test_data["hosts"]
 
-    @patch.dict('os.environ', {}, clear=True)
+    @patch.dict("os.environ", {}, clear=True)
     def test_parse_policy_without_tailscale_validation(self):
         """Test that local validation is used when Tailscale credentials are not available."""
         test_data = {
@@ -108,7 +115,7 @@ class TestPolicyParser:
             "hosts": {"host1": "192.168.1.1"},
             "tagOwners": {"tag:web": ["group:admin"]},
             "acls": [{"src": ["group:test"], "dst": ["host1:80"]}],
-            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}]
+            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}],
         }
 
         parser = PolicyParser()
@@ -124,7 +131,10 @@ class TestPolicyParser:
         assert parser.groups == test_data["groups"]
         assert parser.hosts == test_data["hosts"]
 
-    @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
+    @patch.dict(
+        "os.environ",
+        {"TAILSCALE_API_KEY": "test-key", "TAILSCALE_TAILNET": "test-tailnet"},
+    )
     def test_parse_policy_tailscale_validation_failure(self):
         """Test that Tailscale validation failures are properly raised."""
         test_data = {
@@ -132,7 +142,7 @@ class TestPolicyParser:
             "hosts": {"host1": "192.168.1.1"},
         }
 
-        parser = PolicyParser()
+        parser = PolicyParser(validate_with_api=True)
         parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
 
         # Mock failed Tailscale validation
@@ -146,19 +156,19 @@ class TestPolicyParser:
 
 class TestPolicyFileLoader:
     """Test cases for PolicyFileLoader."""
-    
+
     def test_load_json_valid(self):
         """Test loading valid JSON file."""
         test_data = {"groups": {"group:test": ["user@example.com"]}}
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(test_data, f)
             temp_path = f.name
-        
+
         loader = PolicyFileLoader()
         result = loader.load_json_or_hujson(temp_path)
         assert result == test_data
-    
+
     def test_load_json_file_not_found(self):
         """Test handling of missing file."""
         loader = PolicyFileLoader()
@@ -168,31 +178,31 @@ class TestPolicyFileLoader:
 
 class TestPolicyValidator:
     """Test cases for PolicyValidator."""
-    
+
     def test_validate_policy_structure_missing_grant_src(self):
         """Test validation of grants with missing src field."""
         data = {"grants": [{"dst": ["target"]}]}  # Missing src
-        
+
         validator = PolicyValidator()
         with pytest.raises(ValueError, match="Grant 1 missing required 'src' field"):
             validator.validate_policy_structure(data)
-    
+
     def test_validate_policy_structure_missing_grant_dst(self):
         """Test validation of grants with missing dst field."""
         data = {"grants": [{"src": ["source"]}]}  # Missing dst
-        
+
         validator = PolicyValidator()
         with pytest.raises(ValueError, match="Grant 1 missing required 'dst' field"):
             validator.validate_policy_structure(data)
-    
+
     def test_validate_policy_structure_invalid_grant_src_type(self):
         """Test validation of grants with wrong src type."""
         data = {"grants": [{"src": "not_a_list", "dst": ["target"]}]}
-        
+
         validator = PolicyValidator()
         with pytest.raises(ValueError, match="Grant 1 'src' field must be a list"):
             validator.validate_policy_structure(data)
-    
+
     def test_validate_ip_specifications_valid(self):
         """Test validation of valid IP specifications."""
         validator = PolicyValidator()
@@ -207,7 +217,7 @@ class TestPolicyValidator:
         validator.validate_ip_specifications(["53"], 1)
         validator.validate_ip_specifications(["853"], 1)
         validator.validate_ip_specifications(["8000-8999"], 1)
-    
+
     def test_validate_ip_specifications_invalid_format(self):
         """Test validation of invalid IP specification formats."""
         validator = PolicyValidator()
@@ -235,8 +245,11 @@ class TestPolicyValidator:
         with pytest.raises(ValueError, match='Bare protocol "udp" is invalid'):
             validator.validate_ip_specifications(["udp"], 1)
 
-    @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
-    @patch('requests.post')
+    @patch.dict(
+        "os.environ",
+        {"TAILSCALE_API_KEY": "test-key", "TAILSCALE_TAILNET": "test-tailnet"},
+    )
+    @patch("requests.post")
     def test_validate_with_tailscale_api_success(self, mock_post):
         """Test successful Tailscale API validation."""
         # Mock successful API response
@@ -253,11 +266,17 @@ class TestPolicyValidator:
         # Verify API was called correctly
         mock_post.assert_called_once()
         call_args = mock_post.call_args
-        assert call_args[1]['auth'] == ('test-key', '')
-        assert 'https://api.tailscale.com/api/v2/tailnet/test-tailnet/acl/validate' in call_args[0]
+        assert call_args[1]["auth"] == ("test-key", "")
+        assert (
+            "https://api.tailscale.com/api/v2/tailnet/test-tailnet/acl/validate"
+            in call_args[0]
+        )
 
-    @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
-    @patch('requests.post')
+    @patch.dict(
+        "os.environ",
+        {"TAILSCALE_API_KEY": "test-key", "TAILSCALE_TAILNET": "test-tailnet"},
+    )
+    @patch("requests.post")
     def test_validate_with_tailscale_api_validation_error(self, mock_post):
         """Test Tailscale API validation with policy errors."""
         # Mock API response with validation errors
@@ -273,22 +292,27 @@ class TestPolicyValidator:
         with pytest.raises(ValueError, match="Policy validation failed"):
             validator.validate_with_tailscale_api(policy_json)
 
-    @patch.dict('os.environ', {}, clear=True)
+    @patch.dict("os.environ", {}, clear=True)
     def test_validate_with_tailscale_api_missing_credentials(self):
         """Test Tailscale API validation with missing credentials."""
         validator = PolicyValidator()
         # Pass JSON string - should fail due to missing credentials
-        with pytest.raises(ValueError, match="Missing TAILSCALE_TAILNET environment variable"):
-            validator.validate_with_tailscale_api("{\"grants\": []}")
+        with pytest.raises(
+            ValueError, match="Missing Tailscale tailnet"
+        ):
+            validator.validate_with_tailscale_api('{"grants": []}')
 
-    @patch.dict('os.environ', {'TAILSCALE_API_KEY': 'test-key', 'TAILSCALE_TAILNET': 'test-tailnet'})
-    @patch('requests.post')
+    @patch.dict(
+        "os.environ",
+        {"TAILSCALE_API_KEY": "test-key", "TAILSCALE_TAILNET": "test-tailnet"},
+    )
+    @patch("requests.post")
     def test_validate_with_tailscale_api_http_error(self, mock_post):
         """Test Tailscale API validation with HTTP error."""
         # Mock HTTP error response
         mock_response = MagicMock()
         mock_response.status_code = 401
-        mock_response.text = 'Unauthorized'
+        mock_response.text = "Unauthorized"
         mock_post.return_value = mock_response
 
         validator = PolicyValidator()
@@ -300,7 +324,7 @@ class TestPolicyValidator:
 
 class TestPolicyData:
     """Test cases for PolicyData."""
-    
+
     def test_from_dict(self):
         """Test creating PolicyData from dictionary."""
         data = {
@@ -308,29 +332,218 @@ class TestPolicyData:
             "hosts": {"host1": "192.168.1.1"},
             "tagOwners": {"tag:web": ["group:admin"]},
             "acls": [{"src": ["group:test"], "dst": ["host1:80"]}],
-            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}]
+            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}],
         }
-        
+
         policy_data = PolicyData.from_dict(data)
-        
+
         assert policy_data.groups == data["groups"]
         assert policy_data.hosts == data["hosts"]
         assert policy_data.tag_owners == data["tagOwners"]
         assert policy_data.acls == data["acls"]
         assert policy_data.grants == data["grants"]
-    
+
     def test_get_stats(self):
         """Test getting statistics from PolicyData."""
         policy_data = PolicyData(
             groups={"group1": [], "group2": []},
             hosts={"host1": "ip1"},
             acls=[{"rule": 1}],
-            grants=[{"rule": 1}, {"rule": 2}]
+            grants=[{"rule": 1}, {"rule": 2}],
         )
-        
+
         stats = policy_data.get_stats()
-        
+
         assert stats["groups"] == 2
         assert stats["hosts"] == 1
         assert stats["acls"] == 1
         assert stats["grants"] == 2
+
+
+class TestPolicyParserRemote:
+    """Test cases for remote policy fetching and new flags."""
+
+    @patch("services.file_loader.requests.get")
+    def test_fetch_remote_policy_success(self, mock_get):
+        """Test successful remote policy fetch."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.text = """
+        {
+            "acls": [{"src": ["group:test"], "dst": ["host1:80"]}],
+            "grants": [{"src": ["group:test"], "dst": ["host1:443"]}]
+        }
+        """
+        mock_get.return_value = mock_response
+
+        parser = PolicyParser(
+            policy_file=None,
+            use_remote_policy=True,
+            validate_with_api=False,
+            api_key="test-key",
+            tailnet="test-tailnet",
+        )
+        parser.parse_policy()
+
+        mock_get.assert_called_once_with(
+            "https://api.tailscale.com/api/v2/tailnet/test-tailnet/acl",
+            auth=("test-key", ""),
+            timeout=30,
+        )
+        assert len(parser.acls) == 1
+        assert len(parser.grants) == 1
+
+    @patch("services.file_loader.requests.get")
+    def test_fetch_remote_policy_http_error(self, mock_get):
+        """Test remote policy fetch with HTTP error."""
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError()
+        mock_get.return_value = mock_response
+
+        parser = PolicyParser(
+            policy_file=None,
+            use_remote_policy=True,
+            validate_with_api=False,
+            api_key="test-key",
+            tailnet="test-tailnet",
+        )
+        with pytest.raises(
+            ValueError, match="Failed to fetch policy from Tailscale API"
+        ):
+            parser.parse_policy()
+
+    @patch("services.file_loader.requests.get")
+    def test_fetch_remote_policy_network_error(self, mock_get):
+        """Test remote policy fetch with network error."""
+        mock_get.side_effect = requests.exceptions.ConnectionError()
+
+        parser = PolicyParser(
+            policy_file=None,
+            use_remote_policy=True,
+            validate_with_api=False,
+            api_key="test-key",
+            tailnet="test-tailnet",
+        )
+        with pytest.raises(
+            ValueError, match="Failed to fetch policy from Tailscale API"
+        ):
+            parser.parse_policy()
+
+    def test_validation_flag_true_with_credentials(self):
+        """Test that API validation is used when validate_with_api=True and credentials present."""
+        test_data = {"acls": [], "grants": []}
+        parser = PolicyParser(
+            policy_file="/fake/path",
+            use_remote_policy=False,
+            validate_with_api=True,
+            api_key="test-key",
+            tailnet="test-tailnet",
+        )
+        parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
+        parser._file_loader.extract_rule_line_numbers = MagicMock(
+            return_value={"acls": [], "grants": []}
+        )
+        parser._validator.validate_with_tailscale_api = MagicMock()
+        parser._validator.validate_policy_structure = MagicMock()
+
+        parser.parse_policy()
+
+        parser._validator.validate_with_tailscale_api.assert_called_once()
+        parser._validator.validate_policy_structure.assert_not_called()
+
+    def test_validation_flag_true_without_credentials(self):
+        """Test that local validation is used when validate_with_api=True but credentials missing."""
+        test_data = {"acls": [], "grants": []}
+        parser = PolicyParser(
+            policy_file="/fake/path",
+            use_remote_policy=False,
+            validate_with_api=True,
+            api_key=None,
+            tailnet=None,
+        )
+        parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
+        parser._file_loader.extract_rule_line_numbers = MagicMock(
+            return_value={"acls": [], "grants": []}
+        )
+        parser._validator.validate_with_tailscale_api = MagicMock()
+        parser._validator.validate_policy_structure = MagicMock()
+
+        parser.parse_policy()
+
+        parser._validator.validate_with_tailscale_api.assert_not_called()
+        parser._validator.validate_policy_structure.assert_called_once()
+
+    def test_validation_flag_false(self):
+        """Test that local validation is used when validate_with_api=False."""
+        test_data = {"acls": [], "grants": []}
+        parser = PolicyParser(
+            policy_file="/fake/path",
+            use_remote_policy=False,
+            validate_with_api=False,
+            api_key="test-key",
+            tailnet="test-tailnet",
+        )
+        parser._file_loader.load_json_or_hujson = MagicMock(return_value=test_data)
+        parser._file_loader.extract_rule_line_numbers = MagicMock(
+            return_value={"acls": [], "grants": []}
+        )
+        parser._validator.validate_with_tailscale_api = MagicMock()
+        parser._validator.validate_policy_structure = MagicMock()
+
+        parser.parse_policy()
+
+        parser._validator.validate_with_tailscale_api.assert_not_called()
+        parser._validator.validate_policy_structure.assert_called_once()
+
+    def test_credential_precedence_cli_over_env(self):
+        """Test that CLI credentials take precedence over environment variables."""
+        with patch.dict(
+            "os.environ",
+            {"TAILSCALE_API_KEY": "env-key", "TAILSCALE_TAILNET": "env-tailnet"},
+        ):
+            parser = PolicyParser(
+                policy_file="/fake/path",
+                use_remote_policy=False,
+                validate_with_api=False,
+                api_key="cli-key",
+                tailnet="cli-tailnet",
+            )
+            assert parser.api_key == "cli-key"
+            assert parser.tailnet == "cli-tailnet"
+
+    def test_credential_precedence_env_over_none(self):
+        """Test that environment variables are used when CLI not provided."""
+        with patch.dict(
+            "os.environ",
+            {"TAILSCALE_API_KEY": "env-key", "TAILSCALE_TAILNET": "env-tailnet"},
+        ):
+            parser = PolicyParser(
+                policy_file="/fake/path",
+                use_remote_policy=False,
+                validate_with_api=False,
+                api_key=None,
+                tailnet=None,
+            )
+            assert parser.api_key == "env-key"
+            assert parser.tailnet == "env-tailnet"
+
+    def test_remote_policy_skips_validation(self):
+        """Test that validation is completely skipped when use_remote_policy=True."""
+        parser = PolicyParser(
+            policy_file=None,
+            use_remote_policy=True,
+            validate_with_api=True,  # should be ignored
+            api_key="test-key",
+            tailnet="test-tailnet",
+        )
+        parser._fetch_remote_policy = MagicMock(return_value={"acls": [], "grants": []})
+        parser._validator.validate_with_tailscale_api = MagicMock()
+        parser._validator.validate_policy_structure = MagicMock()
+
+        parser.parse_policy()
+
+        parser._fetch_remote_policy.assert_called_once()
+        parser._validator.validate_with_tailscale_api.assert_not_called()
+        parser._validator.validate_policy_structure.assert_not_called()
+        assert parser.rule_line_numbers == {"acls": [], "grants": []}

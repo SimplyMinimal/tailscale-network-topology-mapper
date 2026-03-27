@@ -194,15 +194,17 @@ class PolicyValidator:
         Raises:
             ValueError: If validation fails or required parameters are missing
         """
-        # Get credentials from environment if not provided
-        api_key = api_key or os.environ.get('TAILSCALE_API_KEY')
-        tailnet = tailnet or os.environ.get('TAILSCALE_TAILNET')
+        # Get credentials from parameters first, fall back to environment variables if not provided
+        if api_key is None:
+            api_key = os.environ.get('TAILSCALE_API_KEY')
+        if tailnet is None:
+            tailnet = os.environ.get('TAILSCALE_TAILNET')
 
         # Validate required inputs
         if not tailnet:
-            raise ValueError("Missing TAILSCALE_TAILNET environment variable. Required for API Endpoint.")
+            raise ValueError("Missing Tailscale tailnet. Provide via --tailscale-tailnet flag or set TAILSCALE_TAILNET environment variable.")
         if not api_key:
-            raise ValueError("Missing TAILSCALE_API_KEY environment variable")
+            raise ValueError("Missing Tailscale API key. Provide via --tailscale-api-key flag or set TAILSCALE_API_KEY environment variable.")
 
         logging.info("Validating policy content with Tailscale API")
 

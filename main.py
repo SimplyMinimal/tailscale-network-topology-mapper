@@ -18,14 +18,14 @@ Example:
 
 Author: Tailscale Network Topology Mapper Team
 """
-
+import os
 import logging
 import argparse
 
 from policy_parser import PolicyParser
 from network_graph import NetworkGraph
 from renderer import Renderer
-from config import LOG_FORMAT
+from config import LOG_FORMAT, get_policy_file_path
 from services import PolicyParserInterface, NetworkGraphInterface, RendererInterface
 from services.container import DIContainer
 
@@ -81,20 +81,65 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser(
         description="Tailscale Network Topology Mapper",
-        epilog="Generates interactive HTML visualizations of Tailscale network access policies"
+        epilog="Generates interactive HTML visualizations of Tailscale network access policies",
     )
     parser.add_argument(
         "--debug",
         action="store_true",
-        help="Enable debug logging for detailed execution information"
+        help="Enable debug logging for detailed execution information",
     )
     parser.add_argument(
         "--policy-file",
         type=str,
         default=None,
-        help="Path to the policy file (default: policy.hujson in current directory or package directory)"
+        help="Path to the policy file (default: policy.hujson in current directory or package directory)",
+    )
+    parser.add_argument(
+        "--use-remote-tailscale-policy-file",
+        "--tpf",
+        action="store_true",
+        help="Pull policy file via Tailscale API instead of local file",
+    )
+    parser.add_argument(
+        "--validate-with-tailscale-api",
+        "--tv",
+        action="store_true",
+        help="Use Tailscale API validation endpoint (ignored if --tpf is used)",
+    )
+    parser.add_argument(
+        "--tailscale-api-key",
+        type=str,
+        default=None,
+        help="Tailscale API key (overrides TAILSCALE_API_KEY env var)",
+    )
+    parser.add_argument(
+        "--tailscale-tailnet",
+        type=str,
+        default=None,
+        help="Tailscale tailnet (overrides TAILSCALE_TAILNET env var)",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default="network_topology.html",
+        help="Output path for the HTML visualization file",
     )
     args = parser.parse_args()
+
+    # Conflict check: cannot specify both remote policy file and local policy file
+    if args.use_remote_tailscale_policy_file and args.policy_file:
+        parser.error(
+            "--use-remote-tailscale-policy-file (--tpf) and --policy-file cannot be used together. Use one or the other."
+        )
+
+    # TODO: Auto-enable validation when credentials are provided via CLI or environment
+    # Uncomment below to automatically enable Tailscale API validation when credentials are available
+    # if not args.validate_with_tailscale_api:
+    #     cli_has_credentials = args.tailscale_api_key and args.tailscale_tailnet
+    #     env_has_credentials = os.environ.get("TAILSCALE_API_KEY") and os.environ.get("TAILSCALE_TAILNET")
+    #     if cli_has_credentials or env_has_credentials:
+    #         args.validate_with_tailscale_api = True
 
     log_level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(
@@ -105,25 +150,31 @@ def main() -> None:
     logging.info("Starting Tailscale Network Topology Mapper")
     logging.debug(f"Debug logging enabled: {args.debug}")
 
-    # Determine policy file path
-    if args.policy_file:
-        policy_file = args.policy_file
+    # Determine policy file path (only if not using remote policy file)
+    if args.use_remote_tailscale_policy_file:
+        policy_file = None
+        logging.debug("Using remote Tailscale policy file via API")
     else:
-        # Check current working directory first, then fall back to config
-        import os
-        from config import get_policy_file_path
-        cwd_policy = os.path.join(os.getcwd(), "policy.hujson")
-        if os.path.exists(cwd_policy):
-            policy_file = cwd_policy
+        if args.policy_file:
+            policy_file = args.policy_file
         else:
-            policy_file = get_policy_file_path()
-
-    logging.debug(f"Using policy file: {policy_file}")
+            cwd_policy = os.path.join(os.getcwd(), "policy.hujson")
+            if os.path.exists(cwd_policy):
+                policy_file = cwd_policy
+            else:
+                policy_file = get_policy_file_path()
+        logging.debug(f"Using policy file: {policy_file}")
 
     try:
         logging.debug("Initializing PolicyParser via DI container")
-        # Create PolicyParser with explicit policy file path
-        policy_parser = PolicyParser(policy_file=policy_file)
+        # Create PolicyParser with explicit policy file path and new flags
+        policy_parser = PolicyParser(
+            policy_file=policy_file,
+            use_remote_policy=args.use_remote_tailscale_policy_file,
+            validate_with_api=args.validate_with_tailscale_api,
+            api_key=args.tailscale_api_key,
+            tailnet=args.tailscale_tailnet,
+        )
         logging.debug("Parsing policy file")
         policy_parser.parse_policy()
         logging.debug(f"Policy parsing completed. Found {len(policy_parser.groups)} groups, {len(policy_parser.hosts)} hosts, {len(policy_parser.acls)} ACLs, {len(policy_parser.grants)} grants")
@@ -140,7 +191,7 @@ def main() -> None:
     logging.debug("Initializing Renderer via DI container")
     renderer = Renderer(network_graph)
     logging.debug("Rendering network topology to HTML")
-    renderer.render_to_html("network_topology.html")
+    renderer.render_to_html(args.output)
 
     logging.info("Network topology rendered successfully.")
 

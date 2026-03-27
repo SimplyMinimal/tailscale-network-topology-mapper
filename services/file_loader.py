@@ -27,6 +27,7 @@ import hjson
 import logging
 import re
 from typing import Any, Dict, List, Tuple
+import requests
 
 from security_utils import SecureFileHandler
 
@@ -54,13 +55,13 @@ class PolicyFileLoader:
     def load_json_or_hujson(filename: str) -> Any:
         """
         Load and parse a JSON or HuJSON file securely.
-        
+
         Args:
             filename: Path to the file to load
-            
+
         Returns:
             Parsed data structure
-            
+
         Raises:
             ValueError: If file cannot be found, accessed, or parsed
         """
@@ -113,7 +114,7 @@ class PolicyFileLoader:
 
             # Read file content securely
             content = SecureFileHandler.safe_read_file(validated_path)
-            lines = content.split('\n')
+            lines = content.split("\n")
 
             acl_line_numbers = []
             grant_line_numbers = []
@@ -125,45 +126,61 @@ class PolicyFileLoader:
                 stripped_line = line.strip()
 
                 # Skip empty lines and comments
-                if not stripped_line or stripped_line.startswith('//') or stripped_line.startswith('#'):
+                if (
+                    not stripped_line
+                    or stripped_line.startswith("//")
+                    or stripped_line.startswith("#")
+                ):
                     continue
 
                 # Track section boundaries
                 if '"acls"' in stripped_line or "'acls'" in stripped_line:
-                    if '[' in stripped_line:
+                    if "[" in stripped_line:
                         # Array starts on same line
                         in_acls_array = True
                         in_grants_array = False
                     continue
                 elif '"grants"' in stripped_line or "'grants'" in stripped_line:
-                    if '[' in stripped_line:
+                    if "[" in stripped_line:
                         # Array starts on same line
                         in_grants_array = True
                         in_acls_array = False
                     continue
-                elif stripped_line == '[' and (in_acls_array or in_grants_array):
+                elif stripped_line == "[" and (in_acls_array or in_grants_array):
                     # Array starts on next line
                     continue
-                elif (stripped_line.startswith('"') and ':' in stripped_line and
-                      not stripped_line.startswith('"\t') and not stripped_line.startswith('"action') and
-                      not stripped_line.startswith('"src') and not stripped_line.startswith('"dst') and
-                      not stripped_line.startswith('"ip') and not stripped_line.startswith('"via') and
-                      not stripped_line.startswith('"app') and not stripped_line.startswith('"srcPosture') and
-                      not stripped_line.startswith('"dstPosture') and
-                      # Don't treat app field content as new sections (e.g., "example.com/webapp-connector": [{}])
-                      not ('.' in stripped_line and '/' in stripped_line and stripped_line.count('"') >= 2)):
+                elif (
+                    stripped_line.startswith('"')
+                    and ":" in stripped_line
+                    and not stripped_line.startswith('"\t')
+                    and not stripped_line.startswith('"action')
+                    and not stripped_line.startswith('"src')
+                    and not stripped_line.startswith('"dst')
+                    and not stripped_line.startswith('"ip')
+                    and not stripped_line.startswith('"via')
+                    and not stripped_line.startswith('"app')
+                    and not stripped_line.startswith('"srcPosture')
+                    and not stripped_line.startswith('"dstPosture')
+                    and
+                    # Don't treat app field content as new sections (e.g., "example.com/webapp-connector": [{}])
+                    not (
+                        "." in stripped_line
+                        and "/" in stripped_line
+                        and stripped_line.count('"') >= 2
+                    )
+                ):
                     # New top-level section (not a rule property)
                     in_acls_array = False
                     in_grants_array = False
                     continue
-                elif stripped_line == ']':
+                elif stripped_line == "]":
                     # End of array
                     in_acls_array = False
                     in_grants_array = False
                     continue
 
                 # Look for rule objects (lines that start with '{' and are in an array)
-                if stripped_line == '{':
+                if stripped_line == "{":
                     if in_acls_array:
                         acl_line_numbers.append(line_num)
                     elif in_grants_array:
@@ -178,3 +195,35 @@ class PolicyFileLoader:
         except Exception as e:
             logging.error(f"Error extracting rule line numbers: {e}")
             raise ValueError(f"Error extracting rule line numbers: {e}")
+
+    @staticmethod
+    def load_from_tailscale_api(api_key: str, tailnet: str) -> Dict[str, Any]:
+        """
+        Fetch policy file from Tailscale API.
+
+        Args:
+            api_key: Tailscale API key
+            tailnet: Tailscale tailnet
+
+        Returns:
+            Parsed policy data as dictionary
+
+        Raises:
+            ValueError: If request fails or response cannot be parsed
+        """
+        url = f"https://api.tailscale.com/api/v2/tailnet/{tailnet}/acl"
+        try:
+            response = requests.get(url, auth=(api_key, ""), timeout=30)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Failed to fetch policy from Tailscale API: {type(e).__name__}: {e}") from e
+
+        try:
+            # API returns HuJSON (with comments), parse with hjson
+            data = hjson.loads(response.text)
+            logging.debug(
+                f"Successfully fetched and parsed remote policy with {len(data)} top-level keys"
+            )
+            return data
+        except Exception as e:
+            raise ValueError(f"Failed to parse policy response: {e}")

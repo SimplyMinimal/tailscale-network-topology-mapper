@@ -1,6 +1,6 @@
 [project]
 name = "tailscale-network-topology-mapper"
-version = "2.1.4"
+version = "3.1.4"
 description = "A visual way to view your ACL and Grant rules for Tailscale"
 readme = "README.md"
 requires-python = ">=3.10"

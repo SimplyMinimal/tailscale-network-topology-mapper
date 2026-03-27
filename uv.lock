@@ -782,7 +782,7 @@ wheels = [
 
 [[package]]
 name = "tailscale-network-topology-mapper"
-version = "2.1.4"
+version = "3.1.4"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },

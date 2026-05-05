@@ -1,0 +1,16 @@
+---
+services:
+  tailscale_visualizer:
+    container_name: tailscale_visualizer
+    ports:
+      - 8080:8080
+    build:
+      context: ./
+    volumes:
+      - ./policy.hujson:/app/tailscale-network-topology-mapper/policy.hujson:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8080 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

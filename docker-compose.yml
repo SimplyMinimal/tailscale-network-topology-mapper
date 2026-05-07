@@ -3,7 +3,7 @@ services:
   tailscale_visualizer:
     container_name: tailscale_visualizer
     ports:
-      - 8080:8080
+      - 127.0.0.1:8080:8080
     build:
       context: ./
     volumes:

@@ -9,7 +9,13 @@ services:
     volumes:
       - ./policy.hujson:/app/tailscale-network-topology-mapper/policy.hujson:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8080 || exit 1"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080', timeout=5)",
+        ]
       interval: 15s
       timeout: 10s
       retries: 3

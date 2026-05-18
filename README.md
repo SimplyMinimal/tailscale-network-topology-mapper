@@ -299,8 +299,8 @@ This creates (or updates) `network_topology.html`. Open it in any browser.
 ---
 
 ## 🐳 Running with Docker
- <details close>
- <summary><b>Docker instructions</b></summary>
+  <details close>
+  <summary><b>Docker instructions</b></summary>
 If you prefer Docker:
 
 ### Prerequisites
@@ -315,6 +315,17 @@ make build run
 Then open [http://localhost:8080](http://localhost:8080) in your browser.
 
 > Use the filter bar or click on any node to narrow down the view.
+
+### Using Docker Compose
+
+For easier configuration with your own policy file, use the included `docker-compose.yml`:
+
+```bash
+# Place your policy.hujson in the project directory, then run:
+docker-compose up
+```
+
+This will start the container with your policy file mounted. Open [http://localhost:8080](http://localhost:8080) in your browser.
 </details>
 
 ---

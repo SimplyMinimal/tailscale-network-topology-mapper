@@ -322,7 +322,7 @@ For easier configuration with your own policy file, use the included `docker-com
 
 ```bash
 # Place your policy.hujson in the project directory, then run:
-docker-compose up
+docker compose up
 ```
 
 This will start the container with your policy file mounted. Open [http://localhost:8080](http://localhost:8080) in your browser.

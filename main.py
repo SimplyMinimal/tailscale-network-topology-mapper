@@ -28,6 +28,7 @@ from renderer import Renderer
 from config import LOG_FORMAT, get_policy_file_path
 from services import PolicyParserInterface, NetworkGraphInterface, RendererInterface
 from services.container import DIContainer
+from services.device_membership import fetch_tag_membership
 
 
 def setup_dependency_injection() -> DIContainer:
@@ -119,6 +120,12 @@ def main() -> None:
         help="Tailscale tailnet (overrides TAILSCALE_TAILNET env var)",
     )
     parser.add_argument(
+        "--with-devices",
+        "--wd",
+        action="store_true",
+        help="Read tag membership from the Tailscale API and show which devices carry each tag",
+    )
+    parser.add_argument(
         "--output",
         "-o",
         type=str,
@@ -188,8 +195,28 @@ def main() -> None:
     network_graph.build_graph(policy_parser.acls, policy_parser.grants)
     logging.debug(f"Network graph built with {len(network_graph.nodes)} nodes and {len(network_graph.edges)} edges")
 
+    tag_membership = None
+    if args.with_devices:
+        # Credentials are resolved the same way the parser resolves them:
+        # CLI argument first, environment variable second.
+        api_key = args.tailscale_api_key or os.environ.get("TAILSCALE_API_KEY")
+        tailnet = args.tailscale_tailnet or os.environ.get("TAILSCALE_TAILNET")
+        if not api_key or not tailnet:
+            logging.error(
+                "--with-devices needs Tailscale API credentials. Provide "
+                "--tailscale-api-key and --tailscale-tailnet, or set "
+                "TAILSCALE_API_KEY and TAILSCALE_TAILNET."
+            )
+            exit(1)
+        try:
+            logging.debug("Reading tag membership from the Tailscale API")
+            tag_membership = fetch_tag_membership(api_key, tailnet)
+        except ValueError as e:
+            logging.error(f"Reading devices failed: {str(e)}")
+            exit(1)
+
     logging.debug("Initializing Renderer via DI container")
-    renderer = Renderer(network_graph)
+    renderer = Renderer(network_graph, tag_membership=tag_membership)
     logging.debug("Rendering network topology to HTML")
     renderer.render_to_html(args.output)
 

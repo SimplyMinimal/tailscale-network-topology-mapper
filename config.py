@@ -115,6 +115,16 @@ Controls the appearance and behavior of the interactive HTML network graph:
 - cdn_resources: Use remote CDN for JavaScript libraries
 """
 
+# Device node configuration
+DEVICE_NODE_COLOR: str = "#4d9de0"
+"""
+Colour for device nodes added by --with-devices.
+
+Deliberately outside NODE_COLORS: those three colours classify what the policy
+declares (groups, tags, hosts), while a device node comes from the control
+plane and is not part of the policy at all.
+"""
+
 # Logging configuration
 LOG_FORMAT: str = "%(levelname)s [%(filename)s:%(lineno)d]: %(message)s"
 """

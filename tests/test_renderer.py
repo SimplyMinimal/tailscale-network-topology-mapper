@@ -174,6 +174,54 @@ class TestRenderer:
             if os.path.exists(output_file):
                 os.remove(output_file)
 
+class TestRendererDeviceLayer:
+    """Test cases for the optional device layer."""
+
+    @staticmethod
+    def _graph():
+        mock_graph = Mock(spec=NetworkGraph)
+        mock_graph.nodes = {
+            ("tag:web", "#00cc66", "tag:web", "triangle"),
+            ("tag:db", "#00cc66", "tag:db", "triangle"),
+        }
+        mock_graph.edges = [("tag:web", "tag:db")]
+        mock_graph.get_search_metadata.return_value = {"nodes": {}, "edges": {}}
+        return mock_graph
+
+    def _render(self, membership):
+        renderer = Renderer(self._graph(), tag_membership=membership)
+        with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as temp_file:
+            temp_path = temp_file.name
+        try:
+            renderer.render_to_html(temp_path)
+            with open(temp_path) as handle:
+                return handle.read()
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+    def test_no_membership_leaves_the_page_unchanged(self):
+        # The default has to stay exactly the page the tool rendered before.
+        html = self._render(None)
+        assert "tagMembership" not in html
+        assert "device-toggle" not in html
+
+    def test_membership_is_embedded_and_the_controls_are_added(self):
+        html = self._render({"tag:web": ["web-1", "web-2"]})
+        assert '"tag:web": ["web-1", "web-2"]' in html.replace("'", '"')
+        assert "device-toggle" in html
+        assert "anchorsFor" in html
+
+    def test_an_empty_membership_still_renders(self):
+        # An API key scoped to a tailnet with no tagged device is not an error.
+        html = self._render({})
+        assert "tagMembership" in html
+        assert "device-toggle" in html
+
+    def test_the_block_is_inside_the_body(self):
+        html = self._render({"tag:web": ["web-1"]})
+        assert html.index("tagMembership") < html.index("</body>")
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

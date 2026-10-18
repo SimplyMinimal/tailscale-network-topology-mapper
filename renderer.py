@@ -1,12 +1,200 @@
 import logging
 import json
-from typing import List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from pyvis.network import Network
 
 from network_graph import NetworkGraph
-from config import VISUALIZATION_CONFIG, NODE_COLORS, NETWORK_OPTIONS
+from config import VISUALIZATION_CONFIG, NODE_COLORS, NETWORK_OPTIONS, DEVICE_NODE_COLOR
 from services import RendererInterface
+
+
+# The device layer, injected by Renderer._add_device_layer. Kept as a plain
+# string rather than an f-string: it is JavaScript, where every literal brace
+# would otherwise have to be doubled. Its two inputs are declared in a short
+# f-string immediately above it at injection time.
+DEVICE_LAYER_JS = r"""
+// Device layer: maps the policy's tag nodes onto the machines carrying them.
+// tagMembership and DEVICE_COLOR are defined immediately above this block.
+(function () {
+    if (typeof nodes === "undefined" || typeof edges === "undefined") {
+        console.warn("device layer: no vis DataSet found — skipped");
+        return;
+    }
+
+    // A destination node carries its ports: "tag:web [tcp:443]". The
+    // membership key is the bare tag.
+    const baseTag = (id) => String(id).split(" [")[0];
+
+    // Where a device attaches. A tag a rule uses as a source has a bare node,
+    // and that is the single anchor; a tag used only as a destination has no
+    // bare node, only one node per port set, and the device belongs on each of
+    // them. Anchoring on the bare node alone silently drops every
+    // destination-only tag, which in a grants-based policy can be most of them.
+    function anchorsFor(tag) {
+        if (nodes.get(tag)) { return [tag]; }
+        return nodes.get()
+            .map((n) => String(n.id))
+            .filter((id) => baseTag(id) === tag);
+    }
+
+    // ---- Every tag node states how many devices carry it ----
+    const updates = [];
+    nodes.get().forEach(function (node) {
+        const id = String(node.id);
+        if (!id.startsWith("tag:")) { return; }
+        const devices = tagMembership[baseTag(id)] || [];
+        const detail = devices.length
+            ? "\n\nDevices (" + devices.length + "): " + devices.join(", ")
+            : "\n\nNo device carries this tag.";
+        updates.push({
+            id: node.id,
+            label: node.label + " (" + devices.length + ")",
+            title: (node.title || id) + detail,
+        });
+    });
+    nodes.update(updates);
+
+    // ---- Device nodes: off, all, or the devices of one tag ----
+    let buttonShowsAll = false;
+    let added = {nodes: [], edges: []};
+
+    function clearDevices() {
+        if (added.edges.length) { edges.remove(added.edges); }
+        if (added.nodes.length) { nodes.remove(added.nodes); }
+        added = {nodes: [], edges: []};
+    }
+
+    function rememberColor(node) {
+        // The page caches node colours twice and fills both before these nodes
+        // exist: nodeColors for the neighbourhood highlight, which restores
+        // every node from it when the selection clears, and originalNodeColors
+        // for the search, which does the same when a search is cleared. A
+        // device node missing from either loses its colour at that moment.
+        if (typeof nodeColors !== "undefined") { nodeColors[node.id] = node.color; }
+        if (typeof originalNodeColors !== "undefined") {
+            originalNodeColors[node.id] = node.color;
+        }
+    }
+
+    function showDevices(tags) {
+        clearDevices();
+        const nodeIds = [];
+        const edgeIds = [];
+        const newNodes = [];
+        const newEdges = [];
+        const seen = new Set();
+
+        tags.forEach(function (tag) {
+            // A tag carried by devices but named in no rule has no node to
+            // attach to. Inventing one would put something in the picture the
+            // policy does not say; those devices are named in the note below.
+            const anchors = anchorsFor(tag);
+            if (!anchors.length) { return; }
+            (tagMembership[tag] || []).forEach(function (device) {
+                const deviceId = "device:" + device;
+                if (!seen.has(deviceId)) {
+                    seen.add(deviceId);
+                    newNodes.push({
+                        id: deviceId,
+                        label: device,
+                        title: device + "\n\nDevice, from the control plane.",
+                        color: DEVICE_COLOR,
+                        shape: "dot",
+                        size: 8,
+                    });
+                    nodeIds.push(deviceId);
+                }
+                anchors.forEach(function (anchor) {
+                    const edgeId = "device-edge:" + device + "->" + anchor;
+                    newEdges.push({
+                        id: edgeId,
+                        from: deviceId,
+                        to: anchor,
+                        color: {color: DEVICE_COLOR, opacity: 0.45},
+                        dashes: true,
+                        arrows: {to: {enabled: false}},
+                    });
+                    edgeIds.push(edgeId);
+                });
+            });
+        });
+
+        nodes.add(newNodes);
+        edges.add(newEdges);
+        newNodes.forEach(rememberColor);
+        added = {nodes: nodeIds, edges: edgeIds};
+    }
+
+    const button = document.createElement("button");
+    button.id = "device-toggle";
+    button.className = "btn btn-light";
+    button.textContent = "Show devices";
+    button.title = "Click a tag node to show only the devices carrying it.";
+    button.style.cssText = [
+        "position:fixed", "top:110px", "left:12px", "z-index:1000",
+        "border:1px solid #999", "box-shadow:0 1px 3px rgba(0,0,0,.2)",
+    ].join(";");
+    button.addEventListener("click", function () {
+        buttonShowsAll = !buttonShowsAll;
+        showDevices(buttonShowsAll ? Object.keys(tagMembership) : []);
+        button.textContent = buttonShowsAll ? "Hide devices" : "Show devices";
+    });
+    document.body.appendChild(button);
+
+    // ---- Click a tag, see the devices carrying it ----
+    // vis fires selectNode before click, so neighbourhoodHighlight has already
+    // run over a graph without these device nodes by the time this handler adds
+    // them. Calling it again afterwards colours them like any other neighbour
+    // of the selection, which is what makes the filtered view readable.
+    if (typeof network !== "undefined") {
+        network.on("click", function (params) {
+            const selected = (params.nodes || []).map(String);
+            if (selected.length) {
+                if (selected[0].startsWith("tag:")) {
+                    showDevices([baseTag(selected[0])]);
+                    if (typeof neighbourhoodHighlight === "function") {
+                        neighbourhoodHighlight(params);
+                    }
+                }
+                return;
+            }
+            showDevices(buttonShowsAll ? Object.keys(tagMembership) : []);
+        });
+    }
+
+    // ---- Devices the rule graph cannot show ----
+    // A device whose every tag is absent from the policy has no anchor and no
+    // rule: nothing it may reach, and no rule naming it as a destination. That
+    // is a finding about the policy, so it is stated on load rather than left
+    // to be inferred from a device missing under the button.
+    const unanchored = Object.keys(tagMembership).filter((t) => !anchorsFor(t).length);
+    const anchored = new Set(
+        Object.keys(tagMembership)
+            .filter((t) => anchorsFor(t).length)
+            .flatMap((t) => tagMembership[t])
+    );
+    const stranded = [...new Set(unanchored.flatMap((t) => tagMembership[t]))]
+        .filter((d) => !anchored.has(d))
+        .sort();
+    if (stranded.length) {
+        const note = document.createElement("div");
+        note.id = "device-stranded-note";
+        note.textContent = stranded.length + " device(s) on tags no rule names: "
+            + stranded.join(", ");
+        note.title = "Tags carried by a device but absent from every ACL and "
+            + "grant: " + unanchored.join(", ");
+        note.style.cssText = [
+            "position:fixed", "top:150px", "left:12px", "z-index:1000",
+            "max-width:300px", "padding:6px 10px",
+            "font:12px/1.35 system-ui,sans-serif", "color:#663c00",
+            "background:#fff6e5", "border:1px solid #e0b070",
+            "border-radius:4px", "box-shadow:0 1px 3px rgba(0,0,0,.15)",
+        ].join(";");
+        document.body.appendChild(note);
+    }
+})();
+"""
 
 
 class Renderer(RendererInterface):
@@ -18,14 +206,23 @@ class Renderer(RendererInterface):
     for different node types (groups, tags, hosts).
     """
     
-    def __init__(self, network_graph: NetworkGraph) -> None:
+    def __init__(
+        self,
+        network_graph: NetworkGraph,
+        tag_membership: Optional[Dict[str, List[str]]] = None,
+    ) -> None:
         """
         Initialize the renderer with a network graph.
-        
+
         Args:
             network_graph: NetworkGraph instance containing nodes and edges to render
+            tag_membership: Optional mapping of tag to the device names carrying
+                it, from services.device_membership. When given, the rendered
+                page states device counts on tag nodes and can draw the devices
+                themselves; when None, the page is exactly as before.
         """
         self.network_graph = network_graph
+        self.tag_membership = tag_membership
         self.output_file = ""  # Track the output file for legend
         logging.debug(f"Renderer initialized with {len(network_graph.nodes)} nodes and {len(network_graph.edges)} edges")
         self.net = Network(**VISUALIZATION_CONFIG)
@@ -69,6 +266,10 @@ class Renderer(RendererInterface):
 
         logging.debug("Adding legend to HTML file")
         self._add_legend()
+
+        if self.tag_membership is not None:
+            logging.debug("Adding device layer to HTML file")
+            self._add_device_layer()
 
         logging.debug("HTML rendering completed")
 
@@ -1188,3 +1389,33 @@ document.addEventListener('DOMContentLoaded', function() {{
         with open(self.output_file, "a") as f:
             f.write(legend_html)
         logging.debug("Legend added successfully")
+
+    def _add_device_layer(self) -> None:
+        """
+        Annotate the rendered page with tag membership from the control plane.
+
+        Adds three things, all of them inert until the data is present:
+        the device count and names on every tag node, a button that draws one
+        node per device, and a click handler that narrows that to the devices
+        of the clicked tag.
+        """
+        logging.debug(
+            f"Creating device layer for {len(self.tag_membership)} tags"
+        )
+        device_data = f"""
+<script>
+// Tag membership, read from the Tailscale API at render time.
+const tagMembership = {json.dumps(self.tag_membership)};
+const DEVICE_COLOR = {json.dumps(DEVICE_NODE_COLOR)};
+"""
+        device_html = device_data + DEVICE_LAYER_JS + "</script>\n"
+
+        with open(self.output_file, "r") as f:
+            content = f.read()
+
+        content = content.replace("</body>", f"{device_html}</body>")
+
+        with open(self.output_file, "w") as f:
+            f.write(content)
+
+        logging.debug("Device layer added successfully")

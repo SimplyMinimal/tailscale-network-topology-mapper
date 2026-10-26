@@ -28,6 +28,14 @@ The **Tailscale Network Topology Mapper** is a tool for visualizing your network
 - **Keyword Search**: Find nodes by name, port, protocol, routing, posture checks, or group membership.
 - **Highlighting**: Matching nodes are visually marked and highlighted.
 
+### Device Mapping (optional)
+With `--with-devices`, the map also answers *which machine is that?*:
+- **Counts on every tag node**: `tag:production (3)` — a tag nothing carries reads `(0)`
+- **Names in the tooltip**: the devices carrying the tag
+- **Click a tag** to show exactly the devices carrying it
+- **A "Show devices" button** to draw all of them at once
+- **A note** listing devices whose tags appear in no rule
+
 ### Detailed Tooltips
 Hover over nodes to see:
 - Rule references (with line numbers)
@@ -265,6 +273,57 @@ Note: You cannot specify both `--use-remote-tailscale-policy-file` and `--policy
 
 ---
 
+### Mapping Tags onto Devices
+<details close>
+<summary><b>Click to show device mapping setup</b></summary>
+
+The policy file states what a tag may do. It does not state which machine
+carries that tag, so a tag node on the map stands for a rule rather than for
+hardware. `--with-devices` reads the tailnet's devices from the Tailscale API
+and draws the missing half.
+
+#### Command Line Flags
+
+- `--with-devices` / `--wd`: Read tag membership from the Tailscale API (default: false).
+
+It uses the same credentials as validation and the remote policy file, and
+fails with a clear message when they are absent.
+
+#### Usage
+
+```bash
+# Local policy file, device membership from the API
+python3 main.py --with-devices --tailscale-api-key tskey-api-xxxxx --tailscale-tailnet yourcompany.com
+
+# With the environment variables already set
+python3 main.py --with-devices
+
+# Both halves from the API: the live policy and its devices
+python3 main.py --use-remote-tailscale-policy-file --with-devices
+```
+
+#### What you get
+
+- Every `tag:` node carries its device count in the label and the device names
+  in its tooltip. A tag named in a rule that no device carries shows `(0)`,
+  which is otherwise invisible on the map.
+- Clicking a tag node draws exactly the devices carrying it. The existing
+  neighbourhood highlight greys the rest at the same time, so the view is one
+  rule set against the machines it applies to. Clicking empty canvas clears it.
+- A **Show devices** button draws every device at once. It is off on load —
+  on a real tailnet the device layer is large enough to obscure the rule graph
+  underneath.
+- A device whose every tag is absent from the policy has nowhere to attach: no
+  rule names it as a source and none as a destination. Those devices are listed
+  in a note rather than dropped silently.
+
+Devices owned by a user rather than by a tag carry no tags and do not appear;
+the map is drawn from the policy, and the policy has nothing to say about them.
+
+</details>
+
+---
+
 ### Generate the Map
 
 ```bash
@@ -289,6 +348,9 @@ python3 main.py --use-remote-tailscale-policy-file --tailscale-api-key tskey-api
 # Use remote policy file with debug logging
 # This assumes you already have environment variables set for `TAILSCALE_API_KEY` and `TAILSCALE_TAILNET`
 python3 main.py --use-remote-tailscale-policy-file --debug
+
+# Show which devices carry which tag (needs API credentials)
+python3 main.py --with-devices
 
 # Custom output path
 python3 main.py --output custom-output.html
@@ -342,7 +404,7 @@ Check out this sample workflow:
 ## ⚠️ Limitations
 
 - Still in **alpha**—expect some rough edges.
-- Only parses what’s in `policy.hujson`. It doesn’t actively discover devices.
+- Parses what’s in `policy.hujson`. Devices appear only with `--with-devices`, and that reads the device list from the API rather than probing the network.
 - Currently focused only on ACL and Grant rules (other policy sections may be supported in future versions).
 
 ---

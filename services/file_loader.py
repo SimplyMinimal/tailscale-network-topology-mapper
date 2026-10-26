@@ -197,6 +197,41 @@ class PolicyFileLoader:
             raise ValueError(f"Error extracting rule line numbers: {e}")
 
     @staticmethod
+    def load_devices_from_tailscale_api(api_key: str, tailnet: str) -> List[Dict[str, Any]]:
+        """
+        Fetch the tailnet's devices from the Tailscale API.
+
+        The policy file says what a tag may do; this says which machine carries
+        the tag. The two together are what --with-devices draws.
+
+        Args:
+            api_key: Tailscale API key
+            tailnet: Tailscale tailnet
+
+        Returns:
+            The list of device objects as returned by the API
+
+        Raises:
+            ValueError: If the request fails or the response cannot be parsed
+        """
+        url = f"https://api.tailscale.com/api/v2/tailnet/{tailnet}/devices?fields=all"
+        try:
+            response = requests.get(url, auth=(api_key, ""), timeout=30)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            raise ValueError(
+                f"Failed to fetch devices from Tailscale API: {type(e).__name__}: {e}"
+            ) from e
+
+        try:
+            devices = response.json()["devices"]
+        except (ValueError, KeyError) as e:
+            raise ValueError(f"Failed to parse device response: {e}") from e
+
+        logging.debug(f"Fetched {len(devices)} devices from the Tailscale API")
+        return devices
+
+    @staticmethod
     def load_from_tailscale_api(api_key: str, tailnet: str) -> Dict[str, Any]:
         """
         Fetch policy file from Tailscale API.
